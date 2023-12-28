@@ -4,13 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PolygonApiClient.WebSocketsClient
+namespace PolygonApiClient
 {
-
-    public delegate void MessageReceivedEventHandler(object sender, MessageReceivedEventArgs e);
-
-    public delegate void ErrorReceivedEventHandler(object sender, ErrorReceivedEventArgs e);
-
     public class MessageReceivedEventArgs : EventArgs
     {
         public string Message { get; }
@@ -20,7 +15,6 @@ namespace PolygonApiClient.WebSocketsClient
             Message = message;
         }
     }
-
     public class ErrorReceivedEventArgs : EventArgs
     {
         public string ErrorMessage { get; }

@@ -4,9 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Database_Common_Trading;
-using Database_Common_Trading.Models;
-using static Database_Common_Trading.Helpers;
+using FinanceModels;
 
 namespace DataFarm_Polygon.Models
 {

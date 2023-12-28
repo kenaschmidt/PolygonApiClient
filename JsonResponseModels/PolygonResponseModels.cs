@@ -1,11 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Security.Permissions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataFarm_Polygon.Models
 {
@@ -47,13 +40,13 @@ namespace DataFarm_Polygon.Models
         public int[] TradeConditions { get; set; }
 
         [JsonProperty("t")]
-        public long ExchangeTimestamp_Ms { get; set; }
+        public long Timestamp_Ms { get; set; }
 
         [JsonProperty("q")]
         public long SequenceNumber { get; set; }
 
         [JsonProperty("trft")]
-        public long TRFTimestamp_Ms { get; set; }
+        public long TRF_Timestamp_Ms { get; set; }
 
         [JsonProperty("trfi")]
         public long TRF_Identification { get; set; }
@@ -140,140 +133,497 @@ namespace DataFarm_Polygon.Models
 
     #endregion
 
-    #region REST Objects
+    #region REST Market Data Endpoint Objects
 
-    public class RestTrades_Response : IEquatable<RestTrades_Response>
+    //
+    // Stock Aggregate Bars
+    //
+    public class RestAggregatesBars_Response
     {
-        public string next_url { get; set; }
-        public string request_id { get; set; }
-        public string status { get; set; }
+        [JsonProperty("ticker")]
+        public string Ticker { get; set; }
 
-        public RestTrades_Result[] results { get; set; }
+        [JsonProperty("status")]
+        public string Status { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as RestTrades_Response);
-        }
-        public bool Equals(RestTrades_Response other)
-        {
-            return !(other is null) &&
-                   next_url == other.next_url &&
-                   request_id == other.request_id &&
-                   status == other.status &&
-                   EqualityComparer<RestTrades_Result[]>.Default.Equals(results, other.results);
-        }
-        public override int GetHashCode()
-        {
-            int hashCode = 23865236;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(next_url);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(request_id);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(status);
-            hashCode = hashCode * -1521134295 + EqualityComparer<RestTrades_Result[]>.Default.GetHashCode(results);
-            return hashCode;
-        }
-        public static bool operator ==(RestTrades_Response left, RestTrades_Response right)
-        {
-            return EqualityComparer<RestTrades_Response>.Default.Equals(left, right);
-        }
-        public static bool operator !=(RestTrades_Response left, RestTrades_Response right)
-        {
-            return !(left == right);
-        }
+        [JsonProperty("queryCount")]
+        public int QueryCount { get; set; }
+
+        [JsonProperty("resultsCount")]
+        public int ResultsCount { get; set; }
+
+        [JsonProperty("adjusted")]
+        public bool Adjusted { get; set; }
+
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("results")]
+        public RestAggregatesBars_Result[] Results { get; set; }
+
+        [JsonProperty("next_url")]
+        public string Next_URL { get; set; }
     }
-    public class RestTrades_Result : IEquatable<RestTrades_Result>
+    public class RestAggregatesBars_Result
     {
-        // User provided
+        [JsonProperty("o")]
+        public double Open { get; set; }
+
+        [JsonProperty("h")]
+        public double High { get; set; }
+
+        [JsonProperty("l")]
+        public double Low { get; set; }
+
+        [JsonProperty("c")]
+        public double Close { get; set; }
+
+        [JsonProperty("v")]
+        public double Volume { get; set; }
+
+        [JsonProperty("n")]
+        public int NumberOfTrades { get; set; }
+
+        [JsonProperty("t")]
+        public long TimestampStart_ms { get; set; }
+
+        [JsonProperty("vw")]
+        public double VWAP { get; set; }
+
+        [JsonProperty("otc")]
+        public bool IsOTC { get; set; }
+    }
+
+    //
+    // Stock Grouped Daily Bars
+    //
+    public class RestGroupedDailyBars_Response
+    {
+        [JsonProperty("adjusted")]
+        public bool Adjusted { get; set; }
+
+        [JsonProperty("queryCount")]
+        public int QueryCount { get; set; }
+
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("resultsCount")]
+        public int ResultsCount { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("results")]
+        public RestGroupedDailyBars_Result[] Results { get; set; }
+
+    }
+    public class RestGroupedDailyBars_Result
+    {
+        [JsonProperty("o")]
+        public double Open { get; set; }
+
+        [JsonProperty("h")]
+        public double High { get; set; }
+
+        [JsonProperty("l")]
+        public double Low { get; set; }
+
+        [JsonProperty("c")]
+        public double Close { get; set; }
+
+        [JsonProperty("v")]
+        public double Volume { get; set; }
+
+        [JsonProperty("n")]
+        public int NumberOfTrades { get; set; }
+
+        [JsonProperty("t")]
+        public long TimestampEnd_ms { get; set; }
+
+        [JsonProperty("vw")]
+        public double VWAP { get; set; }
+
+        [JsonProperty("otc")]
+        public bool IsOTC { get; set; }
+    }
+
+    //
+    // Stock Daily Open/Close
+    //
+    public class DailyOpenClose_Response
+    {
+        [JsonProperty("afterhours")]
+        public double AfterHoursClose { get; set; }
+
+        [JsonProperty("close")]
+        public double Close { get; set; }
+
+        [JsonProperty("from")]
+        public string RequestDate { get; set; }
+
+        [JsonProperty("high")]
+        public double High { get; set; }
+
+        [JsonProperty("low")]
+        public double Low { get; set; }
+
+        [JsonProperty("open")]
+        public double Open { get; set; }
+
+        [JsonProperty("otc")]
+        public bool IsOTC { get; set; }
+
+        [JsonProperty("preMarket")]
+        public double PremarketOpen { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("symbol")]
         public string Symbol { get; set; }
 
-        public int[] conditions { get; set; }
-        public int correction { get; set; }
-        public int exchange { get; set; }
-        public string id { get; set; }
-        public long participant_timestamp { get; set; }
-        public double price { get; set; }
-        public long sequence_number { get; set; }
-        public long sip_timestamp { get; set; }
-        public double size { get; set; }
-        public int tape { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as RestTrades_Result);
-        }
-
-        public bool Equals(RestTrades_Result other)
-        {
-            return !(other is null) &&
-                   Symbol == other.Symbol &&
-                   EqualityComparer<int[]>.Default.Equals(conditions, other.conditions) &&
-                   correction == other.correction &&
-                   exchange == other.exchange &&
-                   id == other.id &&
-                   participant_timestamp == other.participant_timestamp &&
-                   price == other.price &&
-                   sequence_number == other.sequence_number &&
-                   sip_timestamp == other.sip_timestamp &&
-                   size == other.size &&
-                   tape == other.tape;
-        }
-
-        public override int GetHashCode()
-        {
-            int hashCode = -1049928727;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Symbol);
-            hashCode = hashCode * -1521134295 + EqualityComparer<int[]>.Default.GetHashCode(conditions);
-            hashCode = hashCode * -1521134295 + correction.GetHashCode();
-            hashCode = hashCode * -1521134295 + exchange.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(id);
-            hashCode = hashCode * -1521134295 + participant_timestamp.GetHashCode();
-            hashCode = hashCode * -1521134295 + price.GetHashCode();
-            hashCode = hashCode * -1521134295 + sequence_number.GetHashCode();
-            hashCode = hashCode * -1521134295 + sip_timestamp.GetHashCode();
-            hashCode = hashCode * -1521134295 + size.GetHashCode();
-            hashCode = hashCode * -1521134295 + tape.GetHashCode();
-            return hashCode;
-        }
-
-        public static bool operator ==(RestTrades_Result left, RestTrades_Result right)
-        {
-            return EqualityComparer<RestTrades_Result>.Default.Equals(left, right);
-        }
-
-        public static bool operator !=(RestTrades_Result left, RestTrades_Result right)
-        {
-            return !(left == right);
-        }
+        [JsonProperty("volume")]
+        public long Volume { get; set; }
     }
 
+    //
+    // Stock Previous Close
+    //
+    public class PreviousClose_Response
+    {
+        [JsonProperty("adjusted")]
+        public bool Adjusted { get; set; }
+
+        [JsonProperty("queryCount")]
+        public int QueryCount { get; set; }
+
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("results")]
+        public PreviousClose_Result[] Results { get; set; }
+
+        [JsonProperty("resultsCount")]
+        public int ResultsCount { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+    }
+    public class PreviousClose_Result
+    {
+        [JsonProperty("o")]
+        public double Open { get; set; }
+
+        [JsonProperty("h")]
+        public double High { get; set; }
+
+        [JsonProperty("l")]
+        public double Low { get; set; }
+
+        [JsonProperty("c")]
+        public double Close { get; set; }
+
+        [JsonProperty("v")]
+        public double Volume { get; set; }
+
+        [JsonProperty("n")]
+        public int NumberOfTrades { get; set; }
+
+        [JsonProperty("t")]
+        public long TimestampStart_ms { get; set; }
+
+        [JsonProperty("vw")]
+        public double VWAP { get; set; }
+    }
+
+    //
+    // Stock Trades
+    //
+    public class RestTrades_Response
+    {
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("next_url")]
+        public string Next_URL { get; set; }
+
+        [JsonProperty("results")]
+        public RestTrades_Result[] Results { get; set; }
+    }
+    public class RestTrades_Result
+    {
+        [JsonProperty("conditions")]
+        public int[] Conditions { get; set; }
+
+        [JsonProperty("correction")]
+        public int Correction { get; set; }
+
+        [JsonProperty("exchange")]
+        public int Exchange { get; set; }
+
+        [JsonProperty("id")]
+        public string TradeID { get; set; } // Only for Stocks
+
+        [JsonProperty("participant_timestamp")]
+        public long Participant_Timestamp_Ns { get; set; }
+
+        [JsonProperty("price")]
+        public double Price { get; set; }
+
+        [JsonProperty("sequence_number")]
+        public long Sequence_Number { get; set; } // Only for Stocks
+
+        [JsonProperty("sip_timestamp")]
+        public long SIP_Timestamp_Ns { get; set; }
+
+        [JsonProperty("trf_timestamp")]
+        public long TRF_Timestamp_Ns { get; set; }
+
+        [JsonProperty("trf_id")]
+        public int TRF_ID { get; set; }
+
+        [JsonProperty("size")]
+        public int Size { get; set; }
+
+        [JsonProperty("tape")]
+        public int Tape { get; set; } // Only for Stocks
+    }
+
+    //
+    // Stock Last Trade
+    //
+    public class RestLastTrade_Response
+    {
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("results")]
+        public RestLastTrade_Result[] Results { get; set; }
+    }
+    public class RestLastTrade_Result
+    {
+        [JsonProperty("T")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("c")]
+        public int[] Conditions { get; set; }
+
+        [JsonProperty("e")]
+        public int Correction { get; set; }
+
+        [JsonProperty("f")]
+        public long TRF_Timestamp_Ns { get; set; }
+
+        [JsonProperty("y")]
+        public long Participant_Timestamp_Ns { get; set; }
+
+        [JsonProperty("t")]
+        public long SIP_Timestamp_Ns { get; set; }
+
+        [JsonProperty("x")]
+        public int Exchange { get; set; }
+
+        [JsonProperty("i")]
+        public string TradeID { get; set; } // Only for Stocks
+
+        [JsonProperty("p")]
+        public double Price { get; set; }
+
+        [JsonProperty("q")]
+        public long Sequence_Number { get; set; } // Only for Stocks
+
+        [JsonProperty("s")]
+        public int Size { get; set; }
+
+        [JsonProperty("z")]
+        public int Tape { get; set; } // Only for Stocks
+
+        [JsonProperty("r")]
+        public int TRF_ID { get; set; }
+    }
+
+    //
+    // Stock Quotes
+    //
     public class RestQuotes_Response
     {
-        public string next_url { get; set; }
-        public string request_id { get; set; }
-        public string status { get; set; }
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
 
-        public RestQuotes_Result[] results { get; set; }
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("next_url")]
+        public string Next_URL { get; set; }
+
+        [JsonProperty("results")]
+        public RestQuotes_Result[] Results { get; set; }
     }
     public class RestQuotes_Result
     {
-        // User provided
+        [JsonProperty("ask_exchange")]
+        public int Ask_Exchange { get; set; }
+
+        [JsonProperty("ask_price")]
+        public double Ask_Price { get; set; }
+
+        [JsonProperty("ask_size")]
+        public double Ask_Size_Lots { get; set; }
+
+        [JsonProperty("bid_exchange")]
+        public int Bid_Exchange { get; set; }
+
+        [JsonProperty("bid_price")]
+        public double Bid_Price { get; set; }
+
+        [JsonProperty("bid_size")]
+        public double Bid_Size_Lots { get; set; }
+
+        [JsonProperty("conditions")]
+        public int[] Conditions { get; set; }
+
+        [JsonProperty("indicators")]
+        public int[] Indicators { get; set; }
+
+        [JsonProperty("participant_timestamp")]
+        public long Participant_Timestamp_Ns { get; set; }
+
+        [JsonProperty("sip_timestamp")]
+        public long SIP_Timestamp_Ns { get; set; }
+
+        [JsonProperty("sequence_number")]
+        public long Sequence_Number { get; set; }
+
+        [JsonProperty("tape")]
+        public int Tape { get; set; }
+
+        [JsonProperty("trf_timestamp")]
+        public long TRF_Timestamp_Ns { get; set; }
+    }
+
+    //
+    // Stock Last Quote
+    //
+    public class RestLastQuote_Response
+    {
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("results")]
+        public RestLastQuote_Result[] Results { get; set; }
+    }
+    public class RestLastQuote_Result
+    {
+        [JsonProperty("P")]
+        public double Ask_Price { get; set; }
+
+        [JsonProperty("S")]
+        public int Ask_Size_Lots { get; set; }
+
+        [JsonProperty("T")]
         public string Symbol { get; set; }
 
-        public int ask_exchange { get; set; }
-        public double ask_price { get; set; }
-        public double ask_size { get; set; }
+        [JsonProperty("X")]
+        public int Ask_Exchange { get; set; }
 
-        public int bid_exchange { get; set; }
-        public double bid_price { get; set; }
-        public double bid_size { get; set; }
+        [JsonProperty("c")]
+        public int[] Conditions { get; set; }
 
-        public int[] conditions { get; set; }
-        public int[] indicators { get; set; }
+        [JsonProperty("f")]
+        public long TRF_Timestamp_Ns { get; set; }
 
-        public long participant_timestamp { get; set; }
-        public long sip_timestamp { get; set; }
-        public long sequence_number { get; set; }
-        public int tape { get; set; }
+        [JsonProperty("i")]
+        public int[] Indicators { get; set; }
+
+        [JsonProperty("p")]
+        public double Bid_Price { get; set; }
+
+        [JsonProperty("s")]
+        public int Bid_Size_Lots { get; set; }
+
+        [JsonProperty("q")]
+        public long Sequence_Number { get; set; }
+
+        [JsonProperty("t")]
+        public long SIP_Timestamp_Ns { get; set; }
+
+        [JsonProperty("x")]
+        public int Bid_Exchange { get; set; }
+
+        [JsonProperty("y")]
+        public long Participant_Timestamp_Ns { get; set; }
+
+        [JsonProperty("z")]
+        public int Tape { get; set; }
     }
+
+    //
+    // Snapshots - All Tickers
+    //
+
+    public class RestAllTickers_Response
+    {
+        [JsonProperty("count")]
+        public int Count { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("tickers")]
+        public RestAllTickers_Ticker[] Tickers { get; set; }
+    }
+
+    public class RestAllTickers_Ticker
+    {
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("todaysChange")]
+        public double Todays_Change { get; set; }
+
+        [JsonProperty("todaysChangePerc")]
+        public double Todays_Change_Percent { get; set; }
+
+        [JsonProperty("updated")]
+        public long Last_Update_Timestamp_Ns { get; set; }
+    }
+    public class RestAllTickers_Day
+    {
+
+    }
+    public class RestAllTickers_LastQuote
+    {
+
+    }
+    public class RestAllTickers_LastTrade
+    {
+
+    }
+    public class RestAllTickers_LastMinuteBar
+    {
+
+    }
+    public class RestAllTickers_PrevDayBar
+    {
+
+    }
+
+    #endregion
+
+
 
     public class RestExchange_Response
     {
@@ -322,41 +672,6 @@ namespace DataFarm_Polygon.Models
         public string share_class_figi { get; set; }
         public string ticker { get; set; }
         public string type { get; set; }
-    }
-
-    public class RestAggregates_Response
-    {
-        public string ticker { get; set; }
-        public string status { get; set; }
-        public int queryCount { get; set; }
-        public int resultsCount { get; set; }
-        public bool adjusted { get; set; }
-        public string request_id { get; set; }
-
-        public RestAggregates_Result[] results { get; set; }
-    }
-    public class RestAggregates_Result
-    {
-        [JsonProperty("o")]
-        public double Open { get; set; }
-        [JsonProperty("h")]
-        public double High { get; set; }
-        [JsonProperty("l")]
-        public double Low { get; set; }
-        [JsonProperty("c")]
-        public double Close { get; set; }
-        [JsonProperty("v")]
-        public double Volume { get; set; }
-
-        [JsonProperty("n")]
-        public double NumberOfTrades { get; set; }
-        [JsonProperty("t")]
-        public long Timestamp { get; set; }
-        [JsonProperty("vw")]
-        public double VWAP { get; set; }
-
-        [JsonProperty("otc")]
-        public bool IsOTC { get; set; }
     }
 
     public class RestTradeConditionCodes_Response
@@ -473,5 +788,33 @@ namespace DataFarm_Polygon.Models
         public string timeframe { get; set; }
     }
 
-    #endregion
+    public class RestOptionsChainExpired_Response
+    {
+        public string request_id { get; set; }
+        public RestOptionsChainExpired_Result[] results { get; set; }
+        public string status { get; set; }
+    }
+    public class RestOptionsChainExpired_Result
+    {
+        public RestOptionsChainExpired_AdditionalUnderlyings[] additional_underlyings { get; set; }
+
+        public string cfi { get; set; }
+        public string contract_type { get; set; }
+        public int correction { get; set; }
+        public string exercise_style { get; set; }
+        public string expiration_date { get; set; }
+        public string primary_exchange { get; set; }
+        public int shares_per_contract { get; set; }
+        public double strike_price { get; set; }
+        public string ticker { get; set; }
+        public string underlying_ticker { get; set; }
+    }
+    public class RestOptionsChainExpired_AdditionalUnderlyings
+    {
+        public int amount { get; set; }
+        public string type { get; set; }
+        public string underlying { get; set; }
+
+    }
+
 }
