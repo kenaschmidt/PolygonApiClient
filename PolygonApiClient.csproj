@@ -49,9 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\TapeCodes.cs" />
     <Compile Include="Helpers\Enums.cs" />
     <Compile Include="Helpers\Events.cs" />
+    <Compile Include="Helpers\ExchangeCodes.cs" />
     <Compile Include="Helpers\PolygonHelpers.cs" />
+    <Compile Include="Helpers\QuoteConditionCodes.cs" />
+    <Compile Include="Helpers\QuoteIndicatorCodes.cs" />
+    <Compile Include="Helpers\TickerTypes.cs" />
+    <Compile Include="Helpers\TradeConditionCodes.cs" />
     <Compile Include="JsonResponseModels\PolygonResponseModels.cs" />
     <Compile Include="MasterClient\PolygonClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,7 +1,9 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,6 +13,8 @@ namespace PolygonApiClient
 {
     public static class PolygonHelpers
     {
+        #region Option Symbol Helpers
+
         /// <summary>
         /// Determines if a symbol is an Options symbol, with the format [SYMBOL][YYMMDD][C/P][00000000]
         /// </summary>
@@ -79,6 +83,22 @@ namespace PolygonApiClient
 
             return (symbol, expiry, optionType, strike, size);
         }
+
+        #endregion
+
+        #region Enum/Code Helpers
+        public static string GetDescription(Enum value)
+        {
+            return value
+                    .GetType()
+                    .GetMember(value.ToString())
+                    .FirstOrDefault()?
+                    .GetCustomAttribute<DescriptionAttribute>()?
+                    .Description
+                ?? value.ToString();
+        }
+
+        #endregion
     }
 
 }

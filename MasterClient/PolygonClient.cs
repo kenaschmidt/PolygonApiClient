@@ -71,7 +71,6 @@ namespace PolygonApiClient
 
         #endregion
 
-
         public PolygonClient(string apiKey)
         {
             ApiKey = apiKey;
@@ -79,10 +78,9 @@ namespace PolygonApiClient
             _initPolygonClients();
         }
 
-
         private void _initPolygonClients()
         {
-            // Instatiate the clients which will handle different requests
+            // Instantiate the clients which will handle different requests
 
             restClient = new PolygonRestClient(ApiKey);
 
@@ -117,7 +115,6 @@ namespace PolygonApiClient
                 OnSystemMessage("Could not connect socket: Options");
             }
         }
-
         public async void DisconnectSocketsAsync()
         {
             try
@@ -148,7 +145,7 @@ namespace PolygonApiClient
 
         #region Polygon REST API Market Data Endpoints - STOCKS
 
-        public RestAggregatesBars_Response Aggregates_Bars(
+        public async Task<RestAggregatesBars_Response> Aggregates_Bars_Async(
             string stocksTicker,
             int multiplier,
             PolygonTimespan timespan,
@@ -160,7 +157,8 @@ namespace PolygonApiClient
         {
             throw new NotImplementedException();
         }
-        public RestGroupedDailyBars_Response Grouped_Daily_Bars(
+
+        public async Task<RestGroupedDailyBars_Response> Grouped_Daily_Bars_Async(
             DateTime date,
             bool adjusted = true,
             bool include_otc = false)
@@ -168,7 +166,7 @@ namespace PolygonApiClient
             throw new NotImplementedException();
         }
 
-        public DailyOpenClose_Response Daily_Open_Close(
+        public async Task<DailyOpenClose_Response> Daily_Open_Close_Async(
             string stocksTicker,
             DateTime date,
             bool adjusted = true)
@@ -176,14 +174,14 @@ namespace PolygonApiClient
             throw new NotImplementedException();
         }
 
-        public PreviousClose_Response Previous_Close(
+        public async Task<PreviousClose_Response> Previous_Close_Async(
             string stocksTicker,
             bool adjusted = true)
         {
             throw new NotImplementedException();
         }
 
-        public RestTrades_Response Trades(
+        public async Task<RestTrades_Response> Trades_Async(
             string stocksTicker,
             DateTime timestamp,
             PolygonFilterParams timestampFilter = PolygonFilterParams.none,
@@ -194,13 +192,13 @@ namespace PolygonApiClient
             throw new NotImplementedException();
         }
 
-        public RestLastTrade_Response Last_Trade(
+        public async Task<RestLastTrade_Response> Last_Trade_Async(
             string stocksTicker)
         {
             throw new NotImplementedException();
         }
 
-        public RestQuotes_Response Quotes_NBBO(
+        public async Task<RestQuotes_Response> Quotes_NBBO_Async(
             string stocksTicker,
             DateTime timestamp,
             PolygonFilterParams timestampFilter = PolygonFilterParams.none,
@@ -211,20 +209,144 @@ namespace PolygonApiClient
             throw new NotImplementedException();
         }
 
-        public RestLastQuote_Response Last_Quote(
+        public async Task<RestLastQuote_Response> Last_Quote_Async(
             string stocksTicker)
         {
             throw new NotImplementedException();
         }
 
         //
-        // SNAPSHOTS
+        // Snapshots
         //
 
+        public async Task<RestTickerSnapshot_Response> All_Tickers_Async(
+            List<string> tickers,
+            bool include_otc = false)
+        {
+            throw new NotImplementedException();
+        }
 
+        public async Task<RestTickerSnapshot_Response> Gainers_Losers_Async(
+            PolygonGainersLosers direction = PolygonGainersLosers.gainers,
+            bool include_otc = false)
+        {
+            throw new NotImplementedException();
+        }
 
+        public async Task<RestTickerSnapshot_Response> Ticker_Async(
+            string stocksTicker)
+        {
+            // This method calls the same endpoint as All_Tickers but with a single ticker defined. Return data is exactly the same
+
+            return await All_Tickers_Async(new List<string> { stocksTicker });
+        }
+
+        public async Task<object> Universal_Snapshot_Async()
+        {
+            // This is a bizarre and complicated call that I am not going to bother with for a while
+            throw new NotImplementedException();
+        }
+
+        //
+        // Technical Indicators
+        //
+
+        public async Task<RestMovingAverage_Response> Simple_Moving_Average_Async(
+            string stockTicker,
+            DateTime timestamp,
+            PolygonFilterParams timestampFilter,
+            PolygonTimespan timespan,
+            int window,
+            PolygonAggregateSeriesType series_type,
+            PolygonOrder order = PolygonOrder.desc,
+            bool expand_underlying = false,
+            bool adjusted = true,
+            int limit = 10)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestMovingAverage_Response> Exponential_Moving_Average_Async(
+            string stockTicker,
+            DateTime timestamp,
+            PolygonFilterParams timestampFilter,
+            PolygonTimespan timespan,
+            int window,
+            PolygonAggregateSeriesType series_type,
+            PolygonOrder order = PolygonOrder.desc,
+            bool expand_underlying = false,
+            bool adjusted = true,
+            int limit = 10)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestMACD_Response> Moving_Average_Convergence_Divergence_Async(
+            string stockTicker,
+            DateTime timestamp,
+            PolygonFilterParams timestampFilter,
+            PolygonTimespan timespan,
+            int window,
+            PolygonAggregateSeriesType series_type,
+            PolygonOrder order = PolygonOrder.desc,
+            bool expand_underlying = false,
+            bool adjusted = true,
+            int limit = 10)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestMACD_Response> Relative_Strength_Index_Async(
+            string stockTicker,
+            DateTime timestamp,
+            PolygonFilterParams timestampFilter,
+            PolygonTimespan timespan,
+            int window,
+            PolygonAggregateSeriesType series_type,
+            PolygonOrder order = PolygonOrder.desc,
+            bool expand_underlying = false,
+            bool adjusted = true,
+            int limit = 10)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
+
+        #region Polygon REST API Reference Data Endpoints - STOCKS
+
+        public async Task<RestTickers_Response> Tickers_Async(
+            string ticker = "",
+            PolygonFilterParams tickerFilter = PolygonFilterParams.none,
+            PolygonTickerType type = PolygonTickerType.None,
+            PolygonMarket market = PolygonMarket.None,
+            string exchange = "",
+            string CUSIP = "",
+            string CIK = "",
+            DateTime? date = null,
+            string search = "",
+            bool active = true,
+            PolygonOrder order = PolygonOrder.asc,
+            PolygonTickerSort sort = PolygonTickerSort.ticker
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestTickerDetail_Response> Ticker_Details_Async(
+            string ticker,
+            DateTime? date = null
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+
+
+
+
 
         #region REST Requests (Static) OLD
 
