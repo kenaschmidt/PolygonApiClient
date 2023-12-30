@@ -1,5 +1,4 @@
-﻿using DataFarm_Polygon.Models;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -39,7 +38,7 @@ namespace PolygonApiClient.WebSocketsClient
 
         private System.Net.WebSockets.ClientWebSocket client { get; } = new ClientWebSocket();
 
-        public ConnectionEndpoint Endpoint { get; }
+        public PolygonConnectionEndpoint Endpoint { get; }
         private Uri connectionPath { get; }
         private string APIKey { get; }
 
@@ -73,7 +72,7 @@ namespace PolygonApiClient.WebSocketsClient
 
         #endregion
 
-        public PolygonSocketClient(string apiKey, ConnectionEndpoint endpoint)
+        public PolygonSocketClient(string apiKey, PolygonConnectionEndpoint endpoint)
         {
             Endpoint = endpoint;
             connectionPath = new Uri($"{BaseUri}{endpoint.ToString()}");
@@ -209,19 +208,19 @@ namespace PolygonApiClient.WebSocketsClient
                 switch (obj.Value<string>("ev"))
                 {
                     case "status":
-                        statusMessageHandler(obj.ToObject<SocketMessage>());
+                        statusMessageHandler(obj.ToObject<Socket_Message>());
                         break;
                     case "AM":
-                        aggregateMinuteMessageHandler(obj.ToObject<SocketAggregate>());
+                        aggregateMinuteMessageHandler(obj.ToObject<Socket_Aggregate>());
                         break;
                     case "A":
-                        aggregateSecondMessageHandler(obj.ToObject<SocketAggregate>());
+                        aggregateSecondMessageHandler(obj.ToObject<Socket_Aggregate>());
                         break;
                     case "T":
-                        tradeMessageHandler(obj.ToObject<SocketTrade>());
+                        tradeMessageHandler(obj.ToObject<Socket_Trade>());
                         break;
                     case "Q":
-                        quoteMessageHandler(obj.ToObject<SocketQuote>());
+                        quoteMessageHandler(obj.ToObject<Socket_Quote>());
                         break;
                     default:
                         throw new Exception();
@@ -261,12 +260,12 @@ namespace PolygonApiClient.WebSocketsClient
 
         public void AggregateSecondBarsStreaming(string symbol)
         {
-            if (this.Endpoint == ConnectionEndpoint.options && symbol.IsOptionSymbol())
+            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""A.O:" + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
             }
-            else if (this.Endpoint == ConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
+            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""A." + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
@@ -277,12 +276,12 @@ namespace PolygonApiClient.WebSocketsClient
 
         public void AggregateMinuteBarsStreaming(string symbol)
         {
-            if (this.Endpoint == ConnectionEndpoint.options && symbol.IsOptionSymbol())
+            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""AM.O:" + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
             }
-            else if (this.Endpoint == ConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
+            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""AM." + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
@@ -295,12 +294,12 @@ namespace PolygonApiClient.WebSocketsClient
         {
 
 
-            if (this.Endpoint == ConnectionEndpoint.options && symbol.IsOptionSymbol())
+            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""T.O:" + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
             }
-            else if (this.Endpoint == ConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
+            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""T.:" + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
@@ -313,12 +312,12 @@ namespace PolygonApiClient.WebSocketsClient
         {
 
 
-            if (this.Endpoint == ConnectionEndpoint.options && symbol.IsOptionSymbol())
+            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""Q.O:" + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
             }
-            else if (this.Endpoint == ConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
+            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
             {
                 string reqStr = @"{""action"":""subscribe"", ""params"":""Q." + symbol.ToUpper() + @"""}";
                 sendAsync(reqStr).Wait();
@@ -331,28 +330,28 @@ namespace PolygonApiClient.WebSocketsClient
 
         #region Data Response Handlers
 
-        private void statusMessageHandler(SocketMessage obj)
+        private void statusMessageHandler(Socket_Message obj)
         {
             OnMessageReceived(obj.Message);
         }
 
-        private void tradeMessageHandler(SocketTrade obj)
+        private void tradeMessageHandler(Socket_Trade obj)
         {
 
         }
 
-        private void quoteMessageHandler(SocketQuote obj)
+        private void quoteMessageHandler(Socket_Quote obj)
         {
 
 
         }
 
-        private void aggregateSecondMessageHandler(SocketAggregate obj)
+        private void aggregateSecondMessageHandler(Socket_Aggregate obj)
         {
 
         }
 
-        private void aggregateMinuteMessageHandler(SocketAggregate obj)
+        private void aggregateMinuteMessageHandler(Socket_Aggregate obj)
         {
 
         }

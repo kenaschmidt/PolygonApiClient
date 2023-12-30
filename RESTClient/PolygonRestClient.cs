@@ -7,7 +7,6 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.Threading;
 using System.Collections.Concurrent;
-using DataFarm_Polygon.Models;
 using PolygonApiClient.WebSocketsClient;
 using System.Security.Permissions;
 

@@ -1,37 +1,67 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
-namespace DataFarm_Polygon.Models
+namespace PolygonApiClient
 {
+    // ------ Notes ------
+    //
+    // 1) Most 'Response' objects inherit common fields from Rest_Response, but due to inconsistency in endpoint return values, not all fields will be populated for all requests, and 
+    //    several response objects hide base fields due to differing naming conventions (example: some endpoints return 'count' and some return 'resultsCount'. Some V1 Responses do not
+    //    follow this pattern and return all fields in the Response object itself (see: Market Holidays, Market Status)
+    //
+    // 2) Not a design factor but please pay attention to timestamp suffixes, as some are returned as millisecond and some are returned as nanosecond.
+    //
+    // 3) All fields are tagged with JsonProperty attributes with their actual return name values, since many are not intuitive and some returned values differ in naming despite being the
+    //    same value. Property names for the same values are kept mostly consistent between objects and consistent with JSON naming when no clarification is needed. One exception is 'Ticker'
+    //    which has been changed to 'Symbol' [almost] everywhere for consistency.
+    //
+    // 4) No conversion is done here for Dates, Enums, etc. Handle elsewhere.
+    //
+    // 5) The 'Stock Financials' objects don't follow the same pattern, since there are so many returned objects and they are all named intuitively already, and it didn't make sense to rename everything. I used a 
+    //    quick converter to generate the C# classes.
+    //
+    // -------------------
+
+
+    //
+    // Standard fields for most REST response objects; not all fields may be used in all requests
+    //
+    public abstract class Rest_Response
+    {
+        [JsonProperty("count")]
+        public int Count { get; set; }
+
+        [JsonProperty("request_id")]
+        public string Request_ID { get; set; }
+
+        [JsonProperty("next_url")]
+        public string Next_URL { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+    }
+
     #region REST Market Data Endpoint Objects
 
     //
     // Stock Aggregate Bars
     //
-    public class RestAggregatesBars_Response
+    public class RestAggregatesBars_Response : Rest_Response
     {
         [JsonProperty("ticker")]
         public string Ticker { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
 
         [JsonProperty("queryCount")]
         public int QueryCount { get; set; }
 
         [JsonProperty("resultsCount")]
-        public int ResultsCount { get; set; }
+        public new int Count { get; set; }
 
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
 
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
         [JsonProperty("results")]
         public RestAggregatesBars_Result[] Results { get; set; }
-
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
     }
     public class RestAggregatesBars_Result
     {
@@ -66,7 +96,7 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Grouped Daily Bars
     //
-    public class RestGroupedDailyBars_Response
+    public class RestGroupedDailyBars_Response : Rest_Response
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -74,14 +104,8 @@ namespace DataFarm_Polygon.Models
         [JsonProperty("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
         [JsonProperty("resultsCount")]
-        public int ResultsCount { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
+        public new int Count { get; set; }
 
         [JsonProperty("results")]
         public RestGroupedDailyBars_Result[] Results { get; set; }
@@ -120,7 +144,7 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Daily Open/Close
     //
-    public class DailyOpenClose_Response
+    public class DailyOpenClose_Response : Rest_Response
     {
         [JsonProperty("afterhours")]
         public double AfterHoursClose { get; set; }
@@ -146,9 +170,6 @@ namespace DataFarm_Polygon.Models
         [JsonProperty("preMarket")]
         public double PremarketOpen { get; set; }
 
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("symbol")]
         public string Symbol { get; set; }
 
@@ -159,7 +180,7 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Previous Close
     //
-    public class PreviousClose_Response
+    public class PreviousClose_Response : Rest_Response
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -167,17 +188,11 @@ namespace DataFarm_Polygon.Models
         [JsonProperty("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
         [JsonProperty("results")]
         public PreviousClose_Result[] Results { get; set; }
 
         [JsonProperty("resultsCount")]
-        public int ResultsCount { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
+        public new int Count { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -212,17 +227,8 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Trades
     //
-    public class RestTrades_Response
+    public class RestTrades_Response : Rest_Response
     {
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
         [JsonProperty("results")]
         public RestTrades_Result[] Results { get; set; }
     }
@@ -238,7 +244,7 @@ namespace DataFarm_Polygon.Models
         public int Exchange { get; set; }
 
         [JsonProperty("id")]
-        public string TradeID { get; set; } // Only for Stocks
+        public string Trade_ID { get; set; } // Only for Stocks
 
         [JsonProperty("participant_timestamp")]
         public long Participant_Timestamp_Ns { get; set; }
@@ -268,14 +274,8 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Last Trade
     //
-    public class RestLastTrade_Response
+    public class RestLastTrade_Response : Rest_Response
     {
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("results")]
         public RestLastTrade_Result[] Results { get; set; }
     }
@@ -303,7 +303,7 @@ namespace DataFarm_Polygon.Models
         public int Exchange { get; set; }
 
         [JsonProperty("i")]
-        public string TradeID { get; set; } // Only for Stocks
+        public string Trade_ID { get; set; } // Only for Stocks
 
         [JsonProperty("p")]
         public double Price { get; set; }
@@ -324,17 +324,8 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Quotes
     //
-    public class RestQuotes_Response
+    public class RestQuotes_Response : Rest_Response
     {
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
         [JsonProperty("results")]
         public RestQuotes_Result[] Results { get; set; }
     }
@@ -383,14 +374,8 @@ namespace DataFarm_Polygon.Models
     //
     // Stock Last Quote
     //
-    public class RestLastQuote_Response
+    public class RestLastQuote_Response : Rest_Response
     {
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("results")]
         public RestLastQuote_Result[] Results { get; set; }
     }
@@ -442,14 +427,8 @@ namespace DataFarm_Polygon.Models
     //
     // Snapshots - These models are used for 'All Tickers', 'Gainers/Losers', and 'Ticker'
     //
-    public class RestTickerSnapshot_Response
+    public class RestTickerSnapshot_Response : Rest_Response
     {
-        [JsonProperty("count")]
-        public int Count { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("tickers")]
         public RestTickerSnapshot_Ticker[] Tickers { get; set; }
     }
@@ -537,7 +516,7 @@ namespace DataFarm_Polygon.Models
         public int Exchange { get; set; }
 
         [JsonProperty("i")]
-        public string TradeID { get; set; } // Only for Stocks
+        public string Trade_ID { get; set; } // Only for Stocks
 
         [JsonProperty("p")]
         public double Price { get; set; }
@@ -548,7 +527,6 @@ namespace DataFarm_Polygon.Models
     }
     public class RestTickerSnapshot_LastMinuteBar
     {
-
         [JsonProperty("o")]
         public double Open { get; set; }
 
@@ -606,17 +584,8 @@ namespace DataFarm_Polygon.Models
     // 
     // Technical Indicators - SMA and EMA
     //
-    public class RestMovingAverage_Response
+    public class RestMovingAverage_Response : Rest_Response
     {
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("results")]
         public RestMovingAverage_Result[] Results { get; set; }
     }
@@ -640,17 +609,8 @@ namespace DataFarm_Polygon.Models
     //
     // Technical Indicators - MACD
     //
-    public class RestMACD_Response
+    public class RestMACD_Response : Rest_Response
     {
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("results")]
         public RestMACD_Result[] Results { get; set; }
     }
@@ -680,17 +640,8 @@ namespace DataFarm_Polygon.Models
     //
     // Technical Indictor - Relative Strength Index
     //
-    public class RestRSI_Response
+    public class RestRSI_Response : Rest_Response
     {
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         [JsonProperty("results")]
         public RestRSI_Result[] Results { get; set; }
     }
@@ -761,20 +712,8 @@ namespace DataFarm_Polygon.Models
     //
     // Tickers
     //
-    public class RestTickers_Response
+    public class RestTickers_Response : Rest_Response
     {
-        [JsonProperty("count")]
-        public int Count { get; set; }
-
-        [JsonProperty("next_url")]
-        public string Next_URL { get; set; }
-
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
         public RestTickers_Result[] Results { get; set; }
     }
     public class RestTickers_Result
@@ -822,14 +761,9 @@ namespace DataFarm_Polygon.Models
     //
     // Ticker V3 - Detailed
     //
-    public class RestTickerDetail_Response
+    public class RestTickerDetail_Response : Rest_Response
     {
-        [JsonProperty("request_id")]
-        public string Request_ID { get; set; }
-
-        [JsonProperty("status")]
-        public string Status { get; set; }
-
+        [JsonProperty("results")]
         public RestTickerDetail_Result[] Results { get; set; }
     }
     public class RestTickerDetail_Result
@@ -915,7 +849,6 @@ namespace DataFarm_Polygon.Models
         [JsonProperty("weighted_shares_outstanding")]
         public int Weighted_Shares_Outstanding { get; set; }
     }
-
     public class RestTickerDetail_Address
     {
         [JsonProperty("address1")]
@@ -939,157 +872,1032 @@ namespace DataFarm_Polygon.Models
         public string Logo_URL { get; set; }
     }
 
+    //
+    // Ticker Events (Experimental)
+    //
+    public class RestTickerEvents_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestTickerEvents_Results[] Results { get; set; }
+    }
+    public class RestTickerEvents_Results
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("events")]
+        public RestTickerEvents_Events[] Events { get; set; }
+    }
+    public class RestTickerEvents_Events
+    {
+        // Undefined
+    }
+
+    //
+    // Ticker News
+    //
+    public class RestTickerNews_Response : Rest_Response
+    {
+        public RestTickerNews_Result[] Results { get; set; }
+    }
+    public class RestTickerNews_Result
+    {
+        [JsonProperty("amp_url")]
+        public string AcceleratedMobilePage_URL { get; set; }
+
+        [JsonProperty("article_url")]
+        public string Article_URL { get; set; }
+
+        [JsonProperty("author")]
+        public string Author { get; set; }
+
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
+        [JsonProperty("id")]
+        public string ID { get; set; }
+
+        [JsonProperty("image_url")]
+        public string Image_URL { get; set; }
+
+        [JsonProperty("keywords")]
+        public string[] Keywords { get; set; }
+
+        [JsonProperty("published_utc")]
+        public string Published_UTC { get; set; }
+
+        [JsonProperty("publisher")]
+        public RestTickerNews_Publisher Publisher { get; set; }
+
+        [JsonProperty("tickers")]
+        public string[] Tickers { get; set; }
+
+        [JsonProperty("title")]
+        public string Title { get; set; }
+
+    }
+    public class RestTickerNews_Publisher
+    {
+        [JsonProperty("favicon_url")]
+        public string Favicon_URL { get; set; }
+
+        [JsonProperty("homepage_url")]
+        public string Homepage_URL { get; set; }
+
+        [JsonProperty("logo_url")]
+        public string Logo_URL { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+    }
+
+    //
+    // Ticker Types
+    //
+    public class RestTickerTypes_Response : Rest_Response
+    {
+        public RestTickerTypes_Result[] Results { get; set; }
+    }
+    public class RestTickerTypes_Result
+    {
+
+        [JsonProperty("asset_class")]
+        public string Asset_Class { get; set; }
+
+        [JsonProperty("code")]
+        public string Code { get; set; }
+
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
+        [JsonProperty("locale")]
+        public string Locale { get; set; }
+    }
+
+    //
+    // Market Holidays
+    //
+    public class RestMarketHolidays_Response
+    {
+        [JsonProperty("close")]
+        public string Closing_Time { get; set; }
+
+        [JsonProperty("date")]
+        public string Date { get; set; }
+
+        [JsonProperty("exchange")]
+        public string Exchange { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("open")]
+        public string Opening_Time { get; set; }
+
+        [JsonProperty("status")]
+        public string Market_Status { get; set; }
+    }
+
+    //
+    // Market Status
+    //
+    public class RestMarketStatus_Response
+    {
+        [JsonProperty("afterHours")]
+        public bool Is_After_Hours { get; set; }
+
+        [JsonProperty("earlyHours")]
+        public bool Is_Premarket { get; set; }
+
+        [JsonProperty("currencies")]
+        public string[] Currency_Markets_Status { get; set; }
+
+        [JsonProperty("exchanges")]
+        public RestMarketStatus_Exchanges Exchanges { get; set; }
+
+        [JsonProperty("indicesGroups")]
+        public RestMarketStatus_IndicesGroups Indices { get; set; }
+
+        [JsonProperty("market")]
+        public string Market_Status { get; set; }
+
+        [JsonProperty("mserverTime")]
+        public string Server_Time { get; set; }
+
+    }
+    public class RestMarketStatus_Currencies
+    {
+
+        [JsonProperty("crypto")]
+        public string Crypto { get; set; }
+
+        [JsonProperty("fx")]
+        public string FOREX { get; set; }
+    }
+    public class RestMarketStatus_Exchanges
+    {
+
+        [JsonProperty("nasdaq")]
+        public string NASDAQ { get; set; }
+
+        [JsonProperty("nyse")]
+        public string NYSE { get; set; }
+
+        [JsonProperty("otc")]
+        public string OTC { get; set; }
+    }
+    public class RestMarketStatus_IndicesGroups
+    {
+
+        [JsonProperty("s_and_p")]
+        public string S_and_P { get; set; }
+
+        [JsonProperty("societe_generale")]
+        public string Societe_Generale { get; set; }
+
+        [JsonProperty("msci")]
+        public string MSCI { get; set; }
+
+        [JsonProperty("ftse_russell")]
+        public string FTSE_Russell { get; set; }
+
+        [JsonProperty("mstar")]
+        public string Morningstar { get; set; }
+
+        [JsonProperty("mstarc")]
+        public string Morningstar_Customer { get; set; }
+
+        [JsonProperty("cccy")]
+        public string CBOE_Crypto { get; set; }
+
+        [JsonProperty("nasdaq")]
+        public string NASDAQ { get; set; }
+
+        [JsonProperty("dow_jones")]
+        public string Dow_Jones { get; set; }
+    }
+
+    //
+    // Stock Splits V3
+    //
+    public class RestStockSplits_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestStockSplits_Result[] Results { get; set; }
+    }
+    public class RestStockSplits_Result
+    {
+        [JsonProperty("execution_date")]
+        public string Execution_Date { get; set; }
+
+        [JsonProperty("split_from")]
+        public double Split_From { get; set; }
+
+        [JsonProperty("split_to")]
+        public double Split_To { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+    }
+
+    //
+    // Dividends V3
+    //
+    public class RestDividends_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestDividends_Result[] results { get; set; }
+    }
+    public class RestDividends_Result
+    {
+        [JsonProperty("cash_amount")]
+        public double Cash_Amount { get; set; }
+
+        [JsonProperty("declaration_date")]
+        public string Declaration_Date { get; set; }
+
+        [JsonProperty("dividend_type")]
+        public string Dividend_Type { get; set; }
+
+        [JsonProperty("ex_dividend_date")]
+        public string Ex_Dividend_Date { get; set; }
+
+        [JsonProperty("frequency")]
+        public int Frequency { get; set; }
+
+        [JsonProperty("pay_date")]
+        public string Pay_Date { get; set; }
+
+        [JsonProperty("record_date")]
+        public string Record_Date { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+    }
+
+    //
+    // Stock Financials (Experimental)
+    //
+    public class RestStockFinancials_Response : Rest_Response
+    {
+        [JsonProperty("result")]
+        public RestStockFinancials_Result[] Result { get; set; }
+    }
+    public class RestStockFinancials_Result
+    {
+        public string cik { get; set; }
+        public string company_name { get; set; }
+        public string end_date { get; set; }
+        public string filing_date { get; set; }
+        public Financials financials { get; set; }
+        public string fiscal_period { get; set; }
+        public string fiscal_year { get; set; }
+        public string source_filing_file_url { get; set; }
+        public string source_filing_url { get; set; }
+        public string start_date { get; set; }
+    }
+    public class Financials
+    {
+        public Balance_sheet balance_sheet { get; set; }
+        public Cash_flow_statement cash_flow_statement { get; set; }
+        public Comprehensive_income comprehensive_income { get; set; }
+        public Income_statement income_statement { get; set; }
+    }
+    public class Balance_sheet
+    {
+        public Assets assets { get; set; }
+        public Current_assets current_assets { get; set; }
+        public Current_liabilities current_liabilities { get; set; }
+        public Equity equity { get; set; }
+        public Equity_attributable_to_noncontrolling_interest equity_attributable_to_noncontrolling_interest { get; set; }
+        public Equity_attributable_to_parent equity_attributable_to_parent { get; set; }
+        public Liabilities liabilities { get; set; }
+        public Liabilities_and_equity liabilities_and_equity { get; set; }
+        public Noncurrent_assets noncurrent_assets { get; set; }
+        public Noncurrent_liabilities noncurrent_liabilities { get; set; }
+
+    }
+    public class Cash_flow_statement
+    {
+        public Exchange_gains_losses exchange_gains_losses { get; set; }
+        public Net_cash_flow net_cash_flow { get; set; }
+        public Net_cash_flow_continuing net_cash_flow_continuing { get; set; }
+        public Net_cash_flow_from_financing_activities net_cash_flow_from_financing_activities { get; set; }
+        public Net_cash_flow_from_financing_activities_continuing net_cash_flow_from_financing_activities_continuing { get; set; }
+        public Net_cash_flow_from_investing_activities net_cash_flow_from_investing_activities { get; set; }
+        public Net_cash_flow_from_investing_activities_continuing net_cash_flow_from_investing_activities_continuing { get; set; }
+        public Net_cash_flow_from_operating_activities net_cash_flow_from_operating_activities { get; set; }
+        public Net_cash_flow_from_operating_activities_continuing net_cash_flow_from_operating_activities_continuing { get; set; }
+    }
+    public class Comprehensive_income
+    {
+        public Comprehensive_income_loss comprehensive_income_loss { get; set; }
+        public Comprehensive_income_loss_attributable_to_noncontrolling_interest comprehensive_income_loss_attributable_to_noncontrolling_interest { get; set; }
+        public Comprehensive_income_loss_attributable_to_parent comprehensive_income_loss_attributable_to_parent { get; set; }
+        public Other_comprehensive_income_loss other_comprehensive_income_loss { get; set; }
+        public Other_comprehensive_income_loss_attributable_to_parent other_comprehensive_income_loss_attributable_to_parent { get; set; }
+    }
+    public class Income_statement
+    {
+        public Basic_earnings_per_share basic_earnings_per_share { get; set; }
+        public Benefits_costs_expenses benefits_costs_expenses { get; set; }
+        public Cost_of_revenue cost_of_revenue { get; set; }
+        public Costs_and_expenses costs_and_expenses { get; set; }
+        public Diluted_earnings_per_share diluted_earnings_per_share { get; set; }
+        public Gross_profit gross_profit { get; set; }
+        public Income_loss_from_continuing_operations_after_tax income_loss_from_continuing_operations_after_tax { get; set; }
+        public Income_loss_from_continuing_operations_before_tax income_loss_from_continuing_operations_before_tax { get; set; }
+        public Income_tax_expense_benefit income_tax_expense_benefit { get; set; }
+        public Interest_expense_operating interest_expense_operating { get; set; }
+        public Net_income_loss net_income_loss { get; set; }
+        public Net_income_loss_attributable_to_noncontrolling_interest net_income_loss_attributable_to_noncontrolling_interest { get; set; }
+        public Net_income_loss_attributable_to_parent net_income_loss_attributable_to_parent { get; set; }
+        public Net_income_loss_available_to_common_stockholders_basic net_income_loss_available_to_common_stockholders_basic { get; set; }
+        public Operating_expenses operating_expenses { get; set; }
+        public Operating_income_loss operating_income_loss { get; set; }
+        public Participating_securities_distributed_and_undistributed_earnings_loss_basic participating_securities_distributed_and_undistributed_earnings_loss_basic { get; set; }
+        public Preferred_stock_dividends_and_other_adjustments preferred_stock_dividends_and_other_adjustments { get; set; }
+        public Revenues revenues { get; set; }
+
+    }
+
+    #region Financial Datapoints
+
+    //
+    // These are all the datapoints returned for the different financial measures - they all inherit from the same class, I just kept them seperate for now in case something changes in the future.
+    //
+
+    public abstract class RestStockFinancials_Datapoint
+    {
+        public string label { get; set; }
+        public int order { get; set; }
+        public string unit { get; set; }
+        public int value { get; set; }
+        public string source { get; set; }
+        public string[] derived_from { get; set; }
+    }
+    public class Assets : RestStockFinancials_Datapoint
+    {
+    }
+    public class Current_assets : RestStockFinancials_Datapoint
+    {
+    }
+    public class Current_liabilities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Equity : RestStockFinancials_Datapoint
+    {
+    }
+    public class Equity_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
+    {
+    }
+    public class Equity_attributable_to_parent : RestStockFinancials_Datapoint
+    {
+    }
+    public class Liabilities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Liabilities_and_equity : RestStockFinancials_Datapoint
+    {
+    }
+    public class Noncurrent_assets : RestStockFinancials_Datapoint
+    {
+    }
+    public class Noncurrent_liabilities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Exchange_gains_losses : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_continuing : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_financing_activities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_financing_activities_continuing : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_investing_activities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_investing_activities_continuing : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_operating_activities : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_cash_flow_from_operating_activities_continuing : RestStockFinancials_Datapoint
+    {
+    }
+    public class Comprehensive_income_loss : RestStockFinancials_Datapoint
+    {
+    }
+    public class Comprehensive_income_loss_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
+    {
+    }
+    public class Comprehensive_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
+    {
+    }
+    public class Other_comprehensive_income_loss : RestStockFinancials_Datapoint
+    {
+    }
+    public class Other_comprehensive_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
+    {
+    }
+    public class Basic_earnings_per_share : RestStockFinancials_Datapoint
+    {
+    }
+    public class Benefits_costs_expenses : RestStockFinancials_Datapoint
+    {
+    }
+    public class Cost_of_revenue : RestStockFinancials_Datapoint
+    {
+    }
+    public class Costs_and_expenses : RestStockFinancials_Datapoint
+    {
+    }
+    public class Diluted_earnings_per_share : RestStockFinancials_Datapoint
+    {
+    }
+    public class Gross_profit : RestStockFinancials_Datapoint
+    {
+    }
+    public class Income_loss_from_continuing_operations_after_tax : RestStockFinancials_Datapoint
+    {
+    }
+    public class Income_loss_from_continuing_operations_before_tax : RestStockFinancials_Datapoint
+    {
+    }
+    public class Income_tax_expense_benefit : RestStockFinancials_Datapoint
+    {
+    }
+    public class Interest_expense_operating : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_income_loss : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_income_loss_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
+    {
+    }
+    public class Net_income_loss_available_to_common_stockholders_basic : RestStockFinancials_Datapoint
+    {
+    }
+    public class Operating_expenses : RestStockFinancials_Datapoint
+    {
+    }
+    public class Operating_income_loss : RestStockFinancials_Datapoint
+    {
+    }
+    public class Participating_securities_distributed_and_undistributed_earnings_loss_basic : RestStockFinancials_Datapoint
+    {
+    }
+    public class Preferred_stock_dividends_and_other_adjustments : RestStockFinancials_Datapoint
+    {
+    }
+    public class Revenues : RestStockFinancials_Datapoint
+    {
+    }
+
     #endregion
 
-    //
-    //
-    //
-    //
-    // Still need to go through below
-    //
-    //
-    //
-    //
 
-    public class RestExchange_Response
+    //
+    // Conditions
+    //
+    public class RestConditions_Response : Rest_Response
     {
-        public int count { get; set; }
-        public string request_id { get; set; }
-        public string status { get; set; }
-
-        public RestExchange_Result[] results { get; set; }
+        [JsonProperty("results")]
+        public RestConditions_Result[] Results { get; set; }
     }
-    public class RestExchange_Result
+    public class RestConditions_Result
     {
-        public string acronym { get; set; }
-        public string asset_class { get; set; }
-        public int id { get; set; }
-        public string locale { get; set; }
-        public string mic { get; set; }
-        public string name { get; set; }
-        public string operating_mic { get; set; }
-        public string participant_id { get; set; }
-        public string type { get; set; }
-        public string url { get; set; }
+        [JsonProperty("abbreviation")]
+        public string Abbreviation { get; set; }
 
-    }
+        [JsonProperty("asset_class")]
+        public string Asset_Class { get; set; }
 
+        [JsonProperty("data_types")]
+        public string[] Data_Types { get; set; }
 
-    public class RestTradeConditionCodes_Response
-    {
-        public int count { get; set; }
-        public string next_url { get; set; }
-        public string request_id { get; set; }
-        public string status { get; set; }
+        [JsonProperty("description")]
+        public string Description { get; set; }
 
-        public RestTradeConditionCodes_Result[] results { get; set; }
-    }
-    public class RestTradeConditionCodes_Result
-    {
-        public string abbreviation { get; set; }
-        public string asset_class { get; set; }
-        public string[] data_types { get; set; }
-        public string description { get; set; }
-        public int exchange { get; set; }
-        public int id { get; set; }
-        public bool legacy { get; set; }
-        public string name { get; set; }
-        public RestTradeConditionCodes_SipMapping sip_mapping { get; set; }
-        public string type { get; set; }
-        public RestTradeConditionCodes_UpdateRules update_rules { get; set; }
+        [JsonProperty("exchange")]
+        public int Exchange { get; set; }
+
+        [JsonProperty("id")]
+        public int ID { get; set; }
+
+        [JsonProperty("legacy")]
+        public bool Legacy { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("sip_mapping")]
+        public RestConditions_SipMapping SIP_Mapping { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("update_rules")]
+        public RestConditions_UpdateRules Update_Rules { get; set; }
 
     }
-    public class RestTradeConditionCodes_SipMapping
+    public class RestConditions_SipMapping
     {
         public string CTA { get; set; }
         public string UTP { get; set; }
         public string OPRA { get; set; }
     }
-    public class RestTradeConditionCodes_UpdateRules
+    public class RestConditions_UpdateRules
     {
-        public RestTradeConditionCodes_Consolidated consolidated { get; set; }
-        public RestTradeConditionCodes_MarketCenter market_center { get; set; }
+        public RestConditions_Consolidated consolidated { get; set; }
+        public RestConditions_MarketCenter market_center { get; set; }
     }
-    public class RestTradeConditionCodes_Consolidated
+    public class RestConditions_Consolidated
     {
         public bool updates_high_low { get; set; }
         public bool updates_open_close { get; set; }
         public bool updates_volume { get; set; }
     }
-    public class RestTradeConditionCodes_MarketCenter
+    public class RestConditions_MarketCenter
     {
         public bool updates_high_low { get; set; }
         public bool updates_open_close { get; set; }
         public bool updates_volume { get; set; }
     }
 
-    public class RestOptionsChain_Response
+    //
+    // Exchanges
+    //
+    public class RestExchange_Response : Rest_Response
     {
-        public string request_id { get; set; }
-        public RestOptionsChain_Result[] results { get; set; }
-        public string status { get; set; }
-        public string next_url { get; set; }
+        [JsonProperty("results")]
+        public RestExchange_Result[] Results { get; set; }
+    }
+    public class RestExchange_Result
+    {
+        [JsonProperty("acronym")]
+        public string Acronym { get; set; }
+
+        [JsonProperty("asset_class")]
+        public string Asset_Class { get; set; }
+
+        [JsonProperty("id")]
+        public int ID { get; set; }
+
+        [JsonProperty("locale")]
+        public string Locale { get; set; }
+
+        [JsonProperty("mic")]
+        public string Market_Identifier_Code_MIC { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("operating_mic")]
+        public string Operating_MIC { get; set; }
+
+        [JsonProperty("participant_id")]
+        public string Participant_ID { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("url")]
+        public string Website_URL { get; set; }
+
+    }
+
+    //
+    // Option Contract (without an S - Market Data Endpoint)
+    //
+    public class RestOptionContract_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestOptionContract_Result[] Results { get; set; }
+    }
+    public class RestOptionContract_Result
+    {
+        [JsonProperty("break_even_price")]
+        public double BreakEvenPrice { get; set; }
+
+        [JsonProperty("day")]
+        public RestOptionContract_Day Day { get; set; }
+
+        [JsonProperty("details")]
+        public RestOptionContract_Details Details { get; set; }
+
+        [JsonProperty("greeks")]
+        public RestOptionContract_Greeks Greeks { get; set; }
+
+        [JsonProperty("implied_volatility")]
+        public double Implied_Volatility { get; set; }
+
+        [JsonProperty("last_quote")]
+        public RestOptionContract_LastQuote Last_Quote { get; set; }
+
+        [JsonProperty("last_trade")]
+        public RestOptionContract_LastTrade Last_Trade { get; set; }
+
+        [JsonProperty("open_interest")]
+        public int Open_Interest { get; set; }
+
+        [JsonProperty("underlying_asset")]
+        public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
+    }
+    public class RestOptionContract_Day
+    {
+        [JsonProperty("change")]
+        public double Change { get; set; }
+
+        [JsonProperty("change_percent")]
+        public double Change_Percent { get; set; }
+
+        [JsonProperty("close")]
+        public double Close { get; set; }
+
+        [JsonProperty("high")]
+        public double High { get; set; }
+
+        [JsonProperty("last_updated")]
+        public int Last_Updated { get; set; }
+
+        [JsonProperty("low")]
+        public double Low { get; set; }
+
+        [JsonProperty("open")]
+        public double Open { get; set; }
+
+        [JsonProperty("previous_close")]
+        public double Previous_Close { get; set; }
+
+        [JsonProperty("volume")]
+        public int Volume { get; set; }
+
+        [JsonProperty("vwap")]
+        public double VWAP { get; set; }
+    }
+    public class RestOptionContract_Details
+    {
+        [JsonProperty("contract_type")]
+        public string Contract_Type { get; set; }
+
+        [JsonProperty("exercise_style")]
+        public string Exercise_Style { get; set; }
+
+        [JsonProperty("expiration_date")]
+        public string Expiration_Date { get; set; }
+
+        [JsonProperty("shares_per_contract")]
+        public int Shares_Per_Contract { get; set; }
+
+        [JsonProperty("strike_price")]
+        public int Strike_Price { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+    }
+    public class RestOptionContract_Greeks
+    {
+        [JsonProperty("delta")]
+        public double Delta { get; set; }
+
+        [JsonProperty("gamma")]
+        public double Gamma { get; set; }
+
+        [JsonProperty("theta")]
+        public double Theta { get; set; }
+
+        [JsonProperty("vega")]
+        public double Vega { get; set; }
+    }
+    public class RestOptionContract_LastQuote
+    {
+        [JsonProperty("ask")]
+        public double Ask { get; set; }
+
+        [JsonProperty("ask_exchange")]
+        public int Ask_Exchange { get; set; }
+
+        [JsonProperty("ask_size")]
+        public int Ask_Size { get; set; }
+
+        [JsonProperty("bid")]
+        public double Bid { get; set; }
+
+        [JsonProperty("bid_exchange")]
+        public int Bid_Exchange { get; set; }
+
+        [JsonProperty("bid_size")]
+        public int Bid_Size { get; set; }
+
+        [JsonProperty("last_updated")]
+        public int Last_Updated { get; set; }
+
+        [JsonProperty("midpoint")]
+        public double Midpoint { get; set; }
+
+        [JsonProperty("timeframe")]
+        public string Timeframe { get; set; }
+    }
+    public class RestOptionContract_LastTrade
+    {
+        [JsonProperty("conditions")]
+        public int[] Condition_Codes { get; set; }
+
+        [JsonProperty("exchange")]
+        public int Exchange { get; set; }
+
+        [JsonProperty("price")]
+        public double Price { get; set; }
+
+        [JsonProperty("sip_timestamp")]
+        public int SIP_Timestamp { get; set; }
+
+        [JsonProperty("size")]
+        public int Size { get; set; }
+
+        [JsonProperty("timeframe")]
+        public string Timeframe { get; set; }
+    }
+    public class RestOptionContract_UnderlyingAsset
+    {
+        [JsonProperty("change_to_break_even")]
+        public double Change_To_BreakEven { get; set; }
+
+        [JsonProperty("last_updated")]
+        public int Last_Updated { get; set; }
+
+        [JsonProperty("price")]
+        public double Price { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("timeframe")]
+        public string Timeframe { get; set; }
+    }
+
+    //
+    // Options Contract (WITH an S... Option[S] - Reference Data Endpoint) --> This object is used for both 'Options Contract' and 'Options Contract[S]' endpoints
+    //
+
+    public class RestOptionsContract_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestOptionsContract_Result[] Results { get; set; }
+    }
+    public class RestOptionsContract_Result
+    {
+        [JsonProperty("additional_underlyings")]
+        public RestOptionsContract_AdditionalUnderlyings[] Additional_Underlyings { get; set; }
+
+        [JsonProperty("cfi")]
+        public string CFI { get; set; }
+
+        [JsonProperty("contract_type")]
+        public string Contract_Type { get; set; }
+
+        [JsonProperty("exercise_style")]
+        public string Exercise_Style { get; set; }
+
+        [JsonProperty("expiration_date")]
+        public string Expiration_Date { get; set; }
+
+        [JsonProperty("primary_exchange")]
+        public string Primary_Exchange { get; set; }
+
+        [JsonProperty("shares_per_contract")]
+        public int Shares_Per_Contract { get; set; }
+
+        [JsonProperty("strike_price")]
+        public int Strik_Price { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("underlying_ticker")]
+        public string Underlying_Ticker { get; set; }
+
+        [JsonProperty("correction")]
+        public int Correction { get; set; }
+    }
+    public class RestOptionsContract_AdditionalUnderlyings
+    {
+        [JsonProperty("amount")]
+        public int Amount { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("underlying")]
+        public string Underlying { get; set; }
+    }
+
+    //
+    // Options Chain
+    //
+
+    public class RestOptionsChain_Response : Rest_Response
+    {
+        [JsonProperty("results")]
+        public RestOptionsChainExpired_Result[] Results { get; set; }
     }
     public class RestOptionsChain_Result
     {
-        public double break_even_price { get; set; }
-        public int open_interest { get; set; }
-        public double implied_volatility { get; set; }
+        [JsonProperty("break_even_price")]
+        public double Break_Even_Price { get; set; }
 
-        public RestOptionsChain_Day day { get; set; }
-        public RestOptionsChain_Details details { get; set; }
-        public RestOptionsChain_Greeks greeks { get; set; }
-        public RestOptionsChain_Quote last_quote { get; set; }
-        public RestOptionsChain_UnderlyingAsset underlying_asset { get; set; }
-    }
-    public class RestOptionsChain_Day
-    {
-        public double change { get; set; }
-        public double change_percent { get; set; }
-        public double close { get; set; }
-        public double high { get; set; }
-        public long last_updated { get; set; }
-        public double low { get; set; }
-        public double open { get; set; }
-        public double previous_close { get; set; }
-        public int volume { get; set; }
-        public double vwap { get; set; }
-    }
-    public class RestOptionsChain_Details
-    {
-        public string contract_type { get; set; }
-        public string exercise_style { get; set; }
-        public string expiration_date { get; set; }
-        public int shares_per_contract { get; set; }
-        public double strike_price { get; set; }
-        public string ticker { get; set; }
-    }
-    public class RestOptionsChain_Greeks
-    {
-        public double delta { get; set; }
-        public double gamma { get; set; }
-        public double theta { get; set; }
-        public double vega { get; set; }
+        [JsonProperty("open_interest")]
+        public int Open_Interest { get; set; }
+
+        [JsonProperty("implied_volatility")]
+        public double Implied_Volatility { get; set; }
+
+        [JsonProperty("day")]
+        public RestOptionContract_Day Day { get; set; }
+
+        [JsonProperty("details")]
+        public RestOptionContract_Details Details { get; set; }
+
+        [JsonProperty("greeks")]
+        public RestOptionContract_Greeks Greeks { get; set; }
+
+        [JsonProperty("last_quote")]
+        public RestOptionsChain_Quote Last_Quote { get; set; }
+
+        [JsonProperty("underlying_asset")]
+        public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
     }
     public class RestOptionsChain_Quote
     {
-        public double ask { get; set; }
-        public int ask_size { get; set; }
-        public double bid { get; set; }
-        public int bid_size { get; set; }
-        public long last_updated { get; set; }
-        public double midpoint { get; set; }
-    }
-    public class RestOptionsChain_UnderlyingAsset
-    {
-        public double change_to_breakeven { get; set; }
-        public long last_updated { get; set; }
-        public double price { get; set; }
-        public string ticker { get; set; }
-        public string timeframe { get; set; }
+        [JsonProperty("ask")]
+        public double Ask { get; set; }
+
+        [JsonProperty("ask_size")]
+        public int Ask_Size { get; set; }
+
+        [JsonProperty("bid")]
+        public double Bid { get; set; }
+
+        [JsonProperty("bid_size")]
+        public int Bid_Size { get; set; }
+
+        [JsonProperty("last_updated")]
+        public long Last_Updated { get; set; }
+
+        [JsonProperty("midpoint")]
+        public double Midpoint { get; set; }
     }
 
-    public class RestOptionsChainExpired_Response
+
+    #endregion
+
+    #region Market Data Channels (Socket) Objects
+
+    public class Socket_Base
+    {
+        [JsonProperty("ev")]
+        public string Event { get; set; }
+    }
+    public class Socket_Message : Socket_Base
+    {
+        [JsonProperty("status")]
+        public string Status { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
+    }
+    public class Socket_Trade : Socket_Base
+    {
+        [JsonProperty("sym")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("x")]
+        public int Exchange_ID { get; set; }
+
+        [JsonProperty("i")]
+        public string Trade_ID { get; set; }
+
+        [JsonProperty("z")]
+        public int Tape { get; set; }
+
+        [JsonProperty("p")]
+        public double Price { get; set; }
+
+        [JsonProperty("s")]
+        public int Size { get; set; }
+
+        [JsonProperty("c")]
+        public int[] Trade_Conditions { get; set; }
+
+        [JsonProperty("t")]
+        public long Timestamp_Ms { get; set; }
+
+        [JsonProperty("q")]
+        public long Sequence_Number { get; set; }
+
+        [JsonProperty("trft")]
+        public long TRF_Timestamp_Ms { get; set; }
+
+        [JsonProperty("trfi")]
+        public long TRF_Identification { get; set; }
+    }
+    public class Socket_Aggregate : Socket_Base
+    {
+        [JsonProperty("sym")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("v")]
+        public int Volume { get; set; }
+
+        [JsonProperty("av")]
+        public int Accumulated_Volume { get; set; }
+
+        [JsonProperty("op")]
+        public double Day_Open { get; set; }
+
+        [JsonProperty("vw")]
+        public double Tick_VWAP { get; set; }
+
+        [JsonProperty("o")]
+        public double Open { get; set; }
+
+        [JsonProperty("c")]
+        public double Close { get; set; }
+
+        [JsonProperty("h")]
+        public double High { get; set; }
+
+        [JsonProperty("l")]
+        public double Low { get; set; }
+
+        [JsonProperty("a")]
+        public double Day_VWAP { get; set; }
+
+        [JsonProperty("z")]
+        public double Average_Trade_Size { get; set; }
+
+        [JsonProperty("s")]
+        public long Timestamp_Start_Ms { get; set; }
+
+        [JsonProperty("e")]
+        public long Timestamp_End_Ms { get; set; }
+    }
+    public class Socket_Quote : Socket_Base
+    {
+        [JsonProperty("sym")]
+        public string Symbol { get; set; }
+
+        [JsonProperty("bx")]
+        public int Bid_Exchange { get; set; }
+
+        [JsonProperty("bp")]
+        public double Bid_Price { get; set; }
+
+        [JsonProperty("bs")]
+        public double Bid_Size_Lots { get; set; }
+
+        [JsonProperty("ax")]
+        public int Ask_Exchange { get; set; }
+
+        [JsonProperty("ap")]
+        public double Ask_Price { get; set; }
+
+        [JsonProperty("as")]
+        public double Ask_Size_Lots { get; set; }
+
+        [JsonProperty("c")]
+        public int Quote_Condition_Code { get; set; }
+
+        [JsonProperty("i")]
+        public int[] Quote_Indicator_Codes { get; set; }
+
+        [JsonProperty("t")]
+        public long Timestamp_Ms { get; set; }
+
+        [JsonProperty("q")]
+        public long Sequence_Number { get; set; }
+
+        [JsonProperty("z")]
+        public int Tape { get; set; }
+    }
+
+    #endregion
+
+
+
+    public class RestOptionsChainExpired_Response : Rest_Response
     {
         public string request_id { get; set; }
         public RestOptionsChainExpired_Result[] results { get; set; }
@@ -1118,138 +1926,5 @@ namespace DataFarm_Polygon.Models
 
     }
 
-
-
-
-    #region Socket Objects
-
-    public class SocketBase
-    {
-        [JsonProperty("ev")]
-        public string Event { get; set; }
-    }
-    public class SocketMessage : SocketBase
-    {
-        [JsonProperty("status")]
-        public string Status { get; set; }
-        [JsonProperty("message")]
-        public string Message { get; set; }
-    }
-    public class SocketTrade : SocketBase
-    {
-        [JsonProperty("sym")]
-        public string Symbol { get; set; }
-
-        [JsonProperty("x")]
-        public int ExchangeId { get; set; }
-
-        [JsonProperty("i")]
-        public string TradeId { get; set; }
-
-        [JsonProperty("z")]
-        public int Tape { get; set; }
-
-        [JsonProperty("p")]
-        public double Price { get; set; }
-
-        [JsonProperty("s")]
-        public int Size { get; set; }
-
-        [JsonProperty("c")]
-        public int[] TradeConditions { get; set; }
-
-        [JsonProperty("t")]
-        public long Timestamp_Ms { get; set; }
-
-        [JsonProperty("q")]
-        public long SequenceNumber { get; set; }
-
-        [JsonProperty("trft")]
-        public long TRF_Timestamp_Ms { get; set; }
-
-        [JsonProperty("trfi")]
-        public long TRF_Identification { get; set; }
-    }
-    public class SocketAggregate : SocketBase
-    {
-        [JsonProperty("sym")]
-        public string Symbol { get; set; }
-
-        [JsonProperty("v")]
-        public int Volume { get; set; }
-
-        [JsonProperty("av")]
-        public int TotalVolume { get; set; }
-
-        [JsonProperty("op")]
-        public double DayOpen { get; set; }
-
-        [JsonProperty("vw")]
-        public double TickVWAP { get; set; }
-
-        [JsonProperty("o")]
-        public double Open { get; set; }
-
-        [JsonProperty("c")]
-        public double Close { get; set; }
-
-        [JsonProperty("h")]
-        public double High { get; set; }
-
-        [JsonProperty("l")]
-        public double Low { get; set; }
-
-        [JsonProperty("a")]
-        public double DayVWAP { get; set; }
-
-        [JsonProperty("z")]
-        public double AverageTradeSize { get; set; }
-
-        [JsonProperty("s")]
-        public long TimeStamp_Start_Ms { get; set; }
-
-        [JsonProperty("e")]
-        public long TimeStamp_End_Ms { get; set; }
-    }
-    public class SocketQuote : SocketBase
-    {
-        [JsonProperty("sym")]
-        public string Symbol { get; set; }
-
-        [JsonProperty("bx")]
-        public int Bid_Exchange { get; set; }
-
-        [JsonProperty("bp")]
-        public double Bid_Price { get; set; }
-
-        [JsonProperty("bs")]
-        public double Bid_Size { get; set; }
-
-        [JsonProperty("ax")]
-        public int Ask_Exchange { get; set; }
-
-        [JsonProperty("ap")]
-        public double Ask_Price { get; set; }
-
-        [JsonProperty("as")]
-        public double Ask_Size { get; set; }
-
-        [JsonProperty("c")]
-        public int ConditionCode { get; set; }
-
-        [JsonProperty("i")]
-        public int[] IndicatorCodes { get; set; }
-
-        [JsonProperty("t")]
-        public long Timestamp_Ms { get; set; }
-
-        [JsonProperty("q")]
-        public long SequenceNumber { get; set; }
-
-        [JsonProperty("z")]
-        public int Tape { get; set; }
-    }
-
-    #endregion
 
 }

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DataFarm_Polygon.Models;
+using PolygonApiClient.Helpers;
 using PolygonApiClient.Properties;
 using PolygonApiClient.RESTClient;
 using PolygonApiClient.WebSocketsClient;
@@ -71,6 +71,8 @@ namespace PolygonApiClient
 
         #endregion
 
+        #region Constructor and Initialization
+
         public PolygonClient(string apiKey)
         {
             ApiKey = apiKey;
@@ -84,10 +86,14 @@ namespace PolygonApiClient
 
             restClient = new PolygonRestClient(ApiKey);
 
-            socketClientStocks = new PolygonSocketClient(ApiKey, ConnectionEndpoint.stocks);
+            socketClientStocks = new PolygonSocketClient(ApiKey, PolygonConnectionEndpoint.stocks);
 
-            socketClientOptions = new PolygonSocketClient(ApiKey, ConnectionEndpoint.options);
+            socketClientOptions = new PolygonSocketClient(ApiKey, PolygonConnectionEndpoint.options);
         }
+
+        #endregion
+
+        #region Connection Management
 
         public async void ConnectSocketsAsync()
         {
@@ -142,11 +148,12 @@ namespace PolygonApiClient
             }
         }
 
+        #endregion
 
-        #region Polygon REST API Market Data Endpoints - STOCKS
+        #region -------------------- Polygon REST API Market Data Endpoints -----------------------
 
         public async Task<RestAggregatesBars_Response> Aggregates_Bars_Async(
-            string stocksTicker,
+            string symbol,
             int multiplier,
             PolygonTimespan timespan,
             DateTime from,
@@ -167,7 +174,7 @@ namespace PolygonApiClient
         }
 
         public async Task<DailyOpenClose_Response> Daily_Open_Close_Async(
-            string stocksTicker,
+            string symbol,
             DateTime date,
             bool adjusted = true)
         {
@@ -175,16 +182,16 @@ namespace PolygonApiClient
         }
 
         public async Task<PreviousClose_Response> Previous_Close_Async(
-            string stocksTicker,
+            string symbol,
             bool adjusted = true)
         {
             throw new NotImplementedException();
         }
 
         public async Task<RestTrades_Response> Trades_Async(
-            string stocksTicker,
+            string symbol,
             DateTime timestamp,
-            PolygonFilterParams timestampFilter = PolygonFilterParams.none,
+            PolygonFilterParams timestampFilter = PolygonFilterParams.NotSet,
             PolygonOrder order = PolygonOrder.asc,
             int limit = 10,
             string sort = "timestamp")
@@ -193,15 +200,15 @@ namespace PolygonApiClient
         }
 
         public async Task<RestLastTrade_Response> Last_Trade_Async(
-            string stocksTicker)
+            string symbol)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<RestQuotes_Response> Quotes_NBBO_Async(
-            string stocksTicker,
+        public async Task<RestQuotes_Response> Quotes_Async(
+            string symbol,
             DateTime timestamp,
-            PolygonFilterParams timestampFilter = PolygonFilterParams.none,
+            PolygonFilterParams timestampFilter = PolygonFilterParams.NotSet,
             PolygonOrder order = PolygonOrder.asc,
             int limit = 10,
             string sort = "timestamp")
@@ -210,14 +217,13 @@ namespace PolygonApiClient
         }
 
         public async Task<RestLastQuote_Response> Last_Quote_Async(
-            string stocksTicker)
+            string symbol)
         {
             throw new NotImplementedException();
         }
 
-        //
-        // Snapshots
-        //
+
+        // ---------- Snapshots ----------
 
         public async Task<RestTickerSnapshot_Response> All_Tickers_Async(
             List<string> tickers,
@@ -241,15 +247,33 @@ namespace PolygonApiClient
             return await All_Tickers_Async(new List<string> { stocksTicker });
         }
 
+        public async Task<RestOptionContract_Response> Option_Contract_Async(
+            string underlyingAsset,
+            string optionContract)
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<RestOptionsChain_Response> Options_Chain_Async(
+            string underlyingAsset,
+            double? strike_price = null,
+            PolygonFilterParams strikePriceFilter = PolygonFilterParams.NotSet,
+            DateTime? expirationDate = null,
+            PolygonFilterParams expirationDateFilter = PolygonFilterParams.NotSet,
+            OptionType contract_type = OptionType.NotSet,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            PolygonOptionsChainSort sort = PolygonOptionsChainSort.NotSet)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<object> Universal_Snapshot_Async()
         {
             // This is a bizarre and complicated call that I am not going to bother with for a while
             throw new NotImplementedException();
         }
 
-        //
-        // Technical Indicators
-        //
+        // ---------- Technical Indicators ----------
 
         public async Task<RestMovingAverage_Response> Simple_Moving_Average_Async(
             string stockTicker,
@@ -313,11 +337,11 @@ namespace PolygonApiClient
 
         #endregion
 
-        #region Polygon REST API Reference Data Endpoints - STOCKS
+        #region -------------------- Polygon REST API Reference Data Endpoints --------------------
 
         public async Task<RestTickers_Response> Tickers_Async(
             string ticker = "",
-            PolygonFilterParams tickerFilter = PolygonFilterParams.none,
+            PolygonFilterParams tickerFilter = PolygonFilterParams.NotSet,
             PolygonTickerType type = PolygonTickerType.None,
             PolygonMarket market = PolygonMarket.None,
             string exchange = "",
@@ -341,242 +365,138 @@ namespace PolygonApiClient
             throw new NotImplementedException();
         }
 
-        #endregion
-
-
-
-
-
-
-        #region REST Requests (Static) OLD
-
-        ///// <summary>
-        ///// Loads the current, active options chain for a stock (non-expired)
-        ///// </summary>
-        ///// <param name="stock"></param>
-        ///// <returns></returns>
-        //public async Task LoadOptionChainAsync(Stock stock)
-        //{
-        //    OnSystemMessage($"Requesting options chain data for {stock.Symbol}");
-
-        //    var result = await restClient.OptionsChainAsync(stock);
-
-        //    OnSystemMessage($"Received {result.Count} results...");
-
-        //    foreach (var item in result)
-        //    {
-        //        var newContract = new Option(
-        //            stock,
-        //            DateTime.ParseExact(item.details.expiration_date, "yyyy-MM-dd", CultureInfo.CurrentCulture),
-        //            item.details.contract_type == "call" ? OptionType.Call : OptionType.Put,
-        //            item.details.strike_price,
-        //            item.details.shares_per_contract);
-
-        //        stock.OptionChain.AddOption(newContract);
-        //    }
-        //    OnSystemMessage($"Populated {stock.OptionChain.Options.Count} contracts.");
-        //}
-
-        ///// <summary>
-        ///// Loads all expired options for a stock (starting from startDate)
-        ///// </summary>
-        ///// <param name="stock"></param>
-        ///// <param name="startDate">First date (inclusive) to look for expiries</param>
-        ///// <returns></returns>
-        //public async Task LoadExpiredOptionChainAsync(Stock stock, DateTime startDate)
-        //{
-
-        //    DateTime requestDate = DateTime.Today.AddDays(-1);
-
-        //    while (requestDate >= startDate)
-        //    {
-
-        //        OnSystemMessage($"Requesting expired options chain data for {stock.Symbol} with expiry {requestDate}");
-
-        //        var result = await restClient.ExpiredOptionsChainAsync(stock, requestDate);
-
-        //        OnSystemMessage($"Received {result.Count} results...");
-
-        //        foreach (var item in result)
-        //        {
-        //            var newContract = new Option(
-        //                stock,
-        //                DateTime.ParseExact(item.expiration_date, "yyyy-MM-dd", CultureInfo.CurrentCulture),
-        //                item.contract_type == "call" ? OptionType.Call : OptionType.Put,
-        //                item.strike_price,
-        //                item.shares_per_contract);
-
-        //            stock.OptionChain.AddOption(newContract);
-        //        }
-
-        //        requestDate = requestDate.AddDays(-1);
-        //    }
-
-        //    OnSystemMessage($"Populated {stock.OptionChain.Options.Count} contracts.");
-        //}
-
-        ///// <summary>
-        ///// Loads aggregate prie bar data for a security
-        ///// </summary>
-        ///// <param name="security"></param>
-        ///// <param name="multiplier"></param>
-        ///// <param name="barSize"></param>
-        ///// <param name="fromDate"></param>
-        ///// <param name="toDate"></param>
-        ///// <returns></returns>
-        //public async Task LoadPriceBarsAsync(Security security, int multiplier, BarSize barSize, DateTime fromDate, DateTime toDate)
-        //{
-        //    OnSystemMessage($"Requesting price data for {security.Symbol}: {multiplier} {barSize.ToString()} from {fromDate:MM/dd/yyyy HH:mm:ss} to {toDate:MM/dd/yyyy HH:mm:ss}");
-
-        //    var result = await restClient.AggregateBarSnapshotAsync(security, multiplier, barSize, fromDate, toDate);
-
-        //    OnSystemMessage($"Received {result.Count} bars...");
-
-        //    List<PriceBar> newBars = new List<PriceBar>();
-
-        //    foreach (var item in result)
-        //    {
-        //        var newBar = new PriceBar(
-        //            security,
-        //            item.TimestampStart_ms.UnixMillisecondsToEst(),
-        //            barSize,
-        //            multiplier,
-        //            item.Open,
-        //            item.High,
-        //            item.Low,
-        //            item.Close,
-        //            (int)item.Volume);
-
-        //        newBars.Add(newBar);
-        //    }
-
-        //    security.AddPriceBars(newBars);
-
-        //    OnSystemMessage($"Added {newBars.Count} bars to security");
-        //}
-
-        ///// <summary>
-        ///// Loads quotes and trades for a security for a specific day
-        ///// </summary>
-        ///// <param name="security"></param>
-        ///// <param name="day"></param>
-        //public async Task LoadQuotesAndTradesAsync(Security security, DateTime day)
-        //{
-        //    // Get lists of quotes and trades seperately
-
-        //    var qTicks = await LoadQuoteTicksAsync(security, day);
-
-        //    var tTicks = await LoadTradeTicksAsync(security, day);
-
-        //    List<Tick> allTicks = new List<Tick>();
-
-        //    OnSystemMessage($"Combining {(qTicks).Count} and {(tTicks).Count}");
-
-        //    allTicks.AddRange(qTicks);
-        //    allTicks.AddRange(tTicks);
-
-        //    // Add the new ticks to the security - clear the existing data so only 1 day is loaded at a time
-
-        //    OnSystemMessage($"Adding combined total {allTicks.Count} ticks");
-
-        //    security.AddTicks(allTicks, true);
-
-        //    OnSystemMessage($"Added {allTicks.Count} ticks to {security.Symbol}");
-        //}
-
-        ///// <summary>
-        ///// Loads all trades for a given security for a single day
-        ///// </summary>
-        ///// <param name="security"></param>
-        ///// <param name="day"></param>
-        ///// <returns></returns>
-        //public async Task<List<TradeTick>> LoadTradeTicksAsync(Security security, DateTime day)
-        //{
-        //    OnSystemMessage($"Requesting trade data for {security.Symbol} on {day:yy-MM-dd}");
-
-        //    var result = await restClient.TradeSnapshotAsync(security, day);
-
-        //    OnSystemMessage($"Received {result.Count} ticks...");
-
-        //    List<TradeTick> newTicks = new List<TradeTick>();
-
-        //    foreach (var item in result)
-        //    {
-        //        var newTick = new TradeTick(security)
-        //        {
-        //            // !!!!
-        //            // NOTE: The timestamp for this call is in NANOSECONDS. Convert to MILLISECONDS manually for consistency
-        //            // !!!!
-
-        //            Timestamp_ms = item.SIP_Timestamp_Ns.NanoToMilli(),
-        //            TradePrice = item.Price,
-        //            TradeSize = item.Size
-        //        };
-
-        //        newTick.ExchangeCode = (Exchange)item.Exchange;
-
-        //        if (item.Conditions != null)
-        //            foreach (var code in item.Conditions)
-        //                newTick.ConditionCodes.Add((TradeConditions)code);
-
-        //        newTicks.Add(newTick);
-        //    }
-
-        //    return newTicks;
-        //}
-
-        ///// <summary>
-        ///// Loads all quote ticks for a given security for a single day
-        ///// </summary>
-        ///// <returns></returns>
-        //public async Task<List<QuoteTick>> LoadQuoteTicksAsync(Security security, DateTime day)
-        //{
-        //    OnSystemMessage($"Requesting quote data for {security.Symbol} on {day:yy-MM-dd}");
-
-        //    var result = await restClient.QuoteSnapshotAsync(security, day);
-
-        //    OnSystemMessage($"Received {result.Count} ticks...");
-
-        //    List<QuoteTick> newTicks = new List<QuoteTick>();
-
-        //    foreach (var item in result)
-        //    {
-        //        var newTick = new QuoteTick(security)
-        //        {
-        //            // !!!!
-        //            // NOTE: The timestamp for this call is in NANOSECONDS. Convert to MILLISECONDS manually for consistency
-        //            // !!!!
-
-        //            Timestamp_ms = item.Participant_Timestamp_Ns.NanoToMilli(),
-        //            BidPrice = item.Bid_Price,
-        //            BidSize = item.Bid_Size,
-        //            BidExchangeCode = (Exchange)item.Bid_Exchange,
-        //            AskPrice = item.Ask_Price,
-        //            AskSize = item.Ask_Size,
-        //            AskExchangeCode = (Exchange)item.Ask_Exchange
-        //        };
-
-        //        if (item.Conditions != null)
-        //            foreach (var code in item.Conditions)
-        //                newTick.ConditionCodes.Add((QuoteConditions)code);
-
-        //        if (item.Indicators != null)
-        //            foreach (var code in item.Indicators)
-        //                newTick.IndicatorCodes.Add((QuoteIndicators)code);
-
-        //        newTicks.Add(newTick);
-        //    }
-
-        //    return newTicks;
-        //}
-
-        #endregion
-
-        #region SOCKET Requests (Live)
-
-
-
-        #endregion
+        public async Task<RestTickerEvents_Response> Ticker_Events_Async(
+            string id,
+            List<string> types)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestTickerNews_Response> Ticker_News_Async(
+            string ticker,
+            PolygonFilterParams tickerFilter,
+            DateTime published_utc,
+            PolygonFilterParams publishedUtcFilter,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            string sort = "published_utc")
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestTickerTypes_Response> Ticker_Types_Async(
+            PolygonMarket asset_class = PolygonMarket.None,
+            PolygonLocale locale = PolygonLocale.None)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestMarketHolidays_Response[]> Market_Holidays_Async()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestMarketStatus_Response> Market_Status_Asyc()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestStockSplits_Response> Stock_Splits_Async(
+            string ticker = "",
+            PolygonFilterParams tickerFilter = PolygonFilterParams.NotSet,
+            DateTime? executionDate = null,
+            PolygonFilterParams executionDateFilter = PolygonFilterParams.NotSet,
+            bool? reverse_split = null,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            PolygonStockSplitSort sort = PolygonStockSplitSort.execution_date
+            )
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<RestDividends_Response> Dividends_Async(
+            string ticker = "",
+            PolygonFilterParams tickerFilter = PolygonFilterParams.NotSet,
+            DateTime? ex_dividend_date = null,
+            PolygonFilterParams exDateFilter = PolygonFilterParams.NotSet,
+            DateTime? record_date = null,
+            PolygonFilterParams recordDateFilter = PolygonFilterParams.NotSet,
+            DateTime? declaration_date = null,
+            PolygonFilterParams declarationDateFilter = PolygonFilterParams.NotSet,
+            DateTime? pay_date = null,
+            PolygonFilterParams payDateFilter = PolygonFilterParams.NotSet,
+            PolygonDividendFrequency frequency = PolygonDividendFrequency.NotSet,
+            double? cash_amount = null,
+            PolygonFilterParams cashAmountFilter = PolygonFilterParams.NotSet,
+            PolygonDividendType dividend_type = PolygonDividendType.NotSet,
+            PolygonSort order = PolygonSort.asc,
+            int limit = 10,
+            PolygonDividendSort sort = PolygonDividendSort.ticker
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestStockFinancials_Response> Stock_Financials_Async(
+            string ticker,
+            DateTime period_of_report_date,
+            PolygonFilterParams periodFilter = PolygonFilterParams.NotSet,
+            PolygonFinancialsTimeframe timeframe = PolygonFinancialsTimeframe.NotSet,
+            bool include_sources = false,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            PolygonFinancialsSort sort = PolygonFinancialsSort.filing_date
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestConditions_Response> Conditions_Async(
+            PolygonMarket asset_class,
+            PolygonConditionCodeDataType data_type = PolygonConditionCodeDataType.None,
+            int id = -1,
+            int SIP = -1,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            PolygonConditionsSort sort = PolygonConditionsSort.NotSet
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestExchange_Response> Exchanges_Async(
+            PolygonMarket asset_class,
+            PolygonLocale locale)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestOptionsContract_Response> Options_Contract_Async(
+            string options_ticker,
+            DateTime? as_of = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<RestOptionsContract_Response> Options_Contracts_Async(
+            string underlying_ticker = "",
+            PolygonFilterParams underlyingTickerFilter = PolygonFilterParams.NotSet,
+            OptionType contract_type = OptionType.NotSet,
+            DateTime? expiration_date = null,
+            PolygonFilterParams expirationDateFilter = PolygonFilterParams.NotSet,
+            DateTime? as_of = null,
+            double? strike_price = null,
+            PolygonFilterParams strikePriceFilter = PolygonFilterParams.NotSet,
+            bool expired = false,
+            PolygonOrder order = PolygonOrder.asc,
+            int limit = 10,
+            PolygonOptionsContractsSort sort = PolygonOptionsContractsSort.NotSet
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion   
 
     }
 

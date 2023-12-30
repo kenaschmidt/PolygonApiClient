@@ -49,8 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers\TapeCodes.cs" />
     <Compile Include="Helpers\Enums.cs" />
+    <Compile Include="Helpers\TapeCodes.cs" />
+    <Compile Include="Helpers\PolygonEnums.cs" />
     <Compile Include="Helpers\Events.cs" />
     <Compile Include="Helpers\ExchangeCodes.cs" />
     <Compile Include="Helpers\PolygonHelpers.cs" />
