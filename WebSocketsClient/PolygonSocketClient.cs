@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace PolygonApiClient.WebSocketsClient
 {
-    internal class PolygonSocketClient
+    public class PolygonSocketClient
     {
         public double FrameSizeMbMax { get; } = 10;
         public double FrameSizeMbMin { get; } = .01;

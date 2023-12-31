@@ -84,6 +84,19 @@ namespace PolygonApiClient
             return (symbol, expiry, optionType, strike, size);
         }
 
+        /// <summary>
+        /// Adds a leading 'O:' if the symbol is identified as an option and if not present already
+        /// </summary>
+        /// <param name="me"></param>
+        /// <returns></returns>
+        private static string AppendOptionIdentifier(this string me)
+        {
+            if (me.IsOptionSymbol() && me.Substring(0, 2) != "O:")
+                return $"O:{me}";
+
+            return me;
+        }
+
         #endregion
 
         #region Enum/Code Helpers
@@ -99,6 +112,66 @@ namespace PolygonApiClient
         }
 
         #endregion
-    }
 
+        #region Parameter Normalization Helpers
+
+        public static string NormalizeSymbol(string symbol)
+        {
+            try
+            {
+                symbol = symbol.ToUpper();
+                return symbol.AppendOptionIdentifier();
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException($"Invalid symbol: {symbol}");
+            }
+        }
+
+        #endregion
+
+        #region REST Request Formatters
+
+        /// <summary>
+        /// Returns a formatted optional parameter string to be used in any REST request... that is, everything after the ? in the reequest URL
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static string OptionalParametersStringBuilder(params (string name, object value)[] values)
+        {
+            if (values.Length == 0)
+                return string.Empty;
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("?");
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i].value != null)
+                {
+                    // Check if there is a filter associated with this parameter
+                    if (i + 1 < values.Length && values[i + 1].name.Contains("Filter") && values[i + 1].value != null)
+                    {
+                        // Add a filter value to the current parameter
+                        sb.Append($"{values[i].name}.{values[i + 1].value}={values[i].value}{(i + 1 < values.Length ? "&" : "")}");
+                    }
+                    else
+                    {
+                        sb.Append($"{values[i].name}={values[i].value}{(i + 1 < values.Length ? "&" : "")}");
+                    }
+
+                    // Skip the next vlue if it is a filter
+                    if (i + 1 < values.Length && values[i + 1].name.Contains("Filter"))
+                    {
+                        i += 1;
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        #endregion
+    }
 }

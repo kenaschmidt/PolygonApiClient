@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace PolygonApiClient
 {
+    public enum PolygonSubscription
+    {
+        basic = 0,
+        starter = 1,
+        developer = 2,
+        advanced = 3
+    }
     public enum PolygonConnectionEndpoint
     {
         stocks = 0,
@@ -35,6 +42,11 @@ namespace PolygonApiClient
         gte = 2,
         lt = 3,
         lte = 4
+    }
+    public enum PolygonCompanyNameFilter
+    {
+        NotSet = 0,
+        search = 1
     }
     public enum PolygonGainersLosers
     {
@@ -144,6 +156,11 @@ namespace PolygonApiClient
         expiration_date = 2,
         strike_Price = 3
     }
+    public enum PolygonNewsSort
+    {
+        NotSet = 0,
+        published_utc = 1
+    }
     public enum PolygonOptionsContractsSort
     {
         NotSet = 0,
@@ -151,6 +168,11 @@ namespace PolygonApiClient
         underlying_ticker = 2,
         expiration_date = 3,
         strike_Price = 4
+    }
+    public enum PolygonTradeQuoteSort
+    {
+        NotSet = 0,
+        timestamp = 1
     }
     public enum PolygonFinancialsTimeframe
     {

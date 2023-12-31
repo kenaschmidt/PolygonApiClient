@@ -24,9 +24,9 @@ namespace PolygonApiClient
 
 
     //
-    // Standard fields for most REST response objects; not all fields may be used in all requests
+    // Standard fields for most REST response objects; not all fields may be used in all requests. <T> defines the type of the 'Results' field
     //
-    public abstract class Rest_Response
+    public abstract class Rest_Response<T>
     {
         [JsonProperty("count")]
         public int Count { get; set; }
@@ -39,6 +39,9 @@ namespace PolygonApiClient
 
         [JsonProperty("status")]
         public string Status { get; set; }
+
+        [JsonProperty("results")]
+        public T[] Results { get; set; }
     }
 
     #region REST Market Data Endpoint Objects
@@ -46,7 +49,7 @@ namespace PolygonApiClient
     //
     // Stock Aggregate Bars
     //
-    public class RestAggregatesBars_Response : Rest_Response
+    public class RestAggregatesBars_Response : Rest_Response<RestAggregatesBars_Result>
     {
         [JsonProperty("ticker")]
         public string Ticker { get; set; }
@@ -60,8 +63,6 @@ namespace PolygonApiClient
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
 
-        [JsonProperty("results")]
-        public RestAggregatesBars_Result[] Results { get; set; }
     }
     public class RestAggregatesBars_Result
     {
@@ -96,7 +97,7 @@ namespace PolygonApiClient
     //
     // Stock Grouped Daily Bars
     //
-    public class RestGroupedDailyBars_Response : Rest_Response
+    public class RestGroupedDailyBars_Response : Rest_Response<RestGroupedDailyBars_Result>
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -106,13 +107,12 @@ namespace PolygonApiClient
 
         [JsonProperty("resultsCount")]
         public new int Count { get; set; }
-
-        [JsonProperty("results")]
-        public RestGroupedDailyBars_Result[] Results { get; set; }
-
     }
     public class RestGroupedDailyBars_Result
     {
+        [JsonProperty("T")]
+        public string Symbol { get; set; }
+
         [JsonProperty("o")]
         public double Open { get; set; }
 
@@ -144,7 +144,7 @@ namespace PolygonApiClient
     //
     // Stock Daily Open/Close
     //
-    public class DailyOpenClose_Response : Rest_Response
+    public class RestDailyOpenClose_Result
     {
         [JsonProperty("afterhours")]
         public double AfterHoursClose { get; set; }
@@ -180,7 +180,7 @@ namespace PolygonApiClient
     //
     // Stock Previous Close
     //
-    public class PreviousClose_Response : Rest_Response
+    public class RestPreviousClose_Response : Rest_Response<RestPreviousClose_Result>
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -188,16 +188,13 @@ namespace PolygonApiClient
         [JsonProperty("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("results")]
-        public PreviousClose_Result[] Results { get; set; }
-
         [JsonProperty("resultsCount")]
         public new int Count { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
     }
-    public class PreviousClose_Result
+    public class RestPreviousClose_Result
     {
         [JsonProperty("o")]
         public double Open { get; set; }
@@ -227,10 +224,8 @@ namespace PolygonApiClient
     //
     // Stock Trades
     //
-    public class RestTrades_Response : Rest_Response
+    public class RestTrades_Response : Rest_Response<RestTrades_Result>
     {
-        [JsonProperty("results")]
-        public RestTrades_Result[] Results { get; set; }
     }
     public class RestTrades_Result
     {
@@ -274,10 +269,8 @@ namespace PolygonApiClient
     //
     // Stock Last Trade
     //
-    public class RestLastTrade_Response : Rest_Response
+    public class RestLastTrade_Response : Rest_Response<RestLastTrade_Result>
     {
-        [JsonProperty("results")]
-        public RestLastTrade_Result[] Results { get; set; }
     }
     public class RestLastTrade_Result
     {
@@ -324,10 +317,8 @@ namespace PolygonApiClient
     //
     // Stock Quotes
     //
-    public class RestQuotes_Response : Rest_Response
+    public class RestQuotes_Response : Rest_Response<RestQuotes_Result>
     {
-        [JsonProperty("results")]
-        public RestQuotes_Result[] Results { get; set; }
     }
     public class RestQuotes_Result
     {
@@ -374,10 +365,8 @@ namespace PolygonApiClient
     //
     // Stock Last Quote
     //
-    public class RestLastQuote_Response : Rest_Response
+    public class RestLastQuote_Response : Rest_Response<RestLastQuote_Result>
     {
-        [JsonProperty("results")]
-        public RestLastQuote_Result[] Results { get; set; }
     }
     public class RestLastQuote_Result
     {
@@ -427,12 +416,12 @@ namespace PolygonApiClient
     //
     // Snapshots - These models are used for 'All Tickers', 'Gainers/Losers', and 'Ticker'
     //
-    public class RestTickerSnapshot_Response : Rest_Response
+    public class RestTickerSnapshot_Response : Rest_Response<RestTickerSnapshot_Result>
     {
         [JsonProperty("tickers")]
-        public RestTickerSnapshot_Ticker[] Tickers { get; set; }
+        public RestTickerSnapshot_Result[] Result { get; set; }
     }
-    public class RestTickerSnapshot_Ticker
+    public class RestTickerSnapshot_Result
     {
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -584,10 +573,8 @@ namespace PolygonApiClient
     // 
     // Technical Indicators - SMA and EMA
     //
-    public class RestMovingAverage_Response : Rest_Response
+    public class RestMovingAverage_Response : Rest_Response<RestMovingAverage_Result>
     {
-        [JsonProperty("results")]
-        public RestMovingAverage_Result[] Results { get; set; }
     }
     public class RestMovingAverage_Result
     {
@@ -609,10 +596,8 @@ namespace PolygonApiClient
     //
     // Technical Indicators - MACD
     //
-    public class RestMACD_Response : Rest_Response
+    public class RestMACD_Response : Rest_Response<RestMACD_Result>
     {
-        [JsonProperty("results")]
-        public RestMACD_Result[] Results { get; set; }
     }
     public class RestMACD_Result
     {
@@ -640,10 +625,8 @@ namespace PolygonApiClient
     //
     // Technical Indictor - Relative Strength Index
     //
-    public class RestRSI_Response : Rest_Response
+    public class RestRSI_Response : Rest_Response<RestRSI_Result>
     {
-        [JsonProperty("results")]
-        public RestRSI_Result[] Results { get; set; }
     }
     public class RestRSI_Result
     {
@@ -712,9 +695,8 @@ namespace PolygonApiClient
     //
     // Tickers
     //
-    public class RestTickers_Response : Rest_Response
+    public class RestTickers_Response : Rest_Response<RestTickers_Result>
     {
-        public RestTickers_Result[] Results { get; set; }
     }
     public class RestTickers_Result
     {
@@ -761,10 +743,8 @@ namespace PolygonApiClient
     //
     // Ticker V3 - Detailed
     //
-    public class RestTickerDetail_Response : Rest_Response
+    public class RestTickerDetail_Response : Rest_Response<RestTickerDetail_Result>
     {
-        [JsonProperty("results")]
-        public RestTickerDetail_Result[] Results { get; set; }
     }
     public class RestTickerDetail_Result
     {
@@ -875,12 +855,10 @@ namespace PolygonApiClient
     //
     // Ticker Events (Experimental)
     //
-    public class RestTickerEvents_Response : Rest_Response
+    public class RestTickerEvents_Response : Rest_Response<RestTickerEvents_Result>
     {
-        [JsonProperty("results")]
-        public RestTickerEvents_Results[] Results { get; set; }
     }
-    public class RestTickerEvents_Results
+    public class RestTickerEvents_Result
     {
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -896,9 +874,8 @@ namespace PolygonApiClient
     //
     // Ticker News
     //
-    public class RestTickerNews_Response : Rest_Response
+    public class RestTickerNews_Response : Rest_Response<RestTickerNews_Result>
     {
-        public RestTickerNews_Result[] Results { get; set; }
     }
     public class RestTickerNews_Result
     {
@@ -954,9 +931,8 @@ namespace PolygonApiClient
     //
     // Ticker Types
     //
-    public class RestTickerTypes_Response : Rest_Response
+    public class RestTickerTypes_Response : Rest_Response<RestTickerTypes_Result>
     {
-        public RestTickerTypes_Result[] Results { get; set; }
     }
     public class RestTickerTypes_Result
     {
@@ -1080,10 +1056,8 @@ namespace PolygonApiClient
     //
     // Stock Splits V3
     //
-    public class RestStockSplits_Response : Rest_Response
+    public class RestStockSplits_Response : Rest_Response<RestStockSplits_Result>
     {
-        [JsonProperty("results")]
-        public RestStockSplits_Result[] Results { get; set; }
     }
     public class RestStockSplits_Result
     {
@@ -1103,10 +1077,8 @@ namespace PolygonApiClient
     //
     // Dividends V3
     //
-    public class RestDividends_Response : Rest_Response
+    public class RestDividends_Response : Rest_Response<RestDividends_Result>
     {
-        [JsonProperty("results")]
-        public RestDividends_Result[] results { get; set; }
     }
     public class RestDividends_Result
     {
@@ -1138,10 +1110,8 @@ namespace PolygonApiClient
     //
     // Stock Financials (Experimental)
     //
-    public class RestStockFinancials_Response : Rest_Response
+    public class RestStockFinancials_Response : Rest_Response<RestStockFinancials_Result>
     {
-        [JsonProperty("result")]
-        public RestStockFinancials_Result[] Result { get; set; }
     }
     public class RestStockFinancials_Result
     {
@@ -1165,67 +1135,59 @@ namespace PolygonApiClient
     }
     public class Balance_sheet
     {
-        public Assets assets { get; set; }
-        public Current_assets current_assets { get; set; }
-        public Current_liabilities current_liabilities { get; set; }
-        public Equity equity { get; set; }
-        public Equity_attributable_to_noncontrolling_interest equity_attributable_to_noncontrolling_interest { get; set; }
-        public Equity_attributable_to_parent equity_attributable_to_parent { get; set; }
-        public Liabilities liabilities { get; set; }
-        public Liabilities_and_equity liabilities_and_equity { get; set; }
-        public Noncurrent_assets noncurrent_assets { get; set; }
-        public Noncurrent_liabilities noncurrent_liabilities { get; set; }
-
+        public RestStockFinancials_Datapoint assets { get; set; }
+        public RestStockFinancials_Datapoint current_assets { get; set; }
+        public RestStockFinancials_Datapoint current_liabilities { get; set; }
+        public RestStockFinancials_Datapoint equity { get; set; }
+        public RestStockFinancials_Datapoint equity_attributable_to_noncontrolling_interest { get; set; }
+        public RestStockFinancials_Datapoint equity_attributable_to_parent { get; set; }
+        public RestStockFinancials_Datapoint liabilities { get; set; }
+        public RestStockFinancials_Datapoint liabilities_and_equity { get; set; }
+        public RestStockFinancials_Datapoint noncurrent_assets { get; set; }
+        public RestStockFinancials_Datapoint noncurrent_liabilities { get; set; }
     }
     public class Cash_flow_statement
     {
-        public Exchange_gains_losses exchange_gains_losses { get; set; }
-        public Net_cash_flow net_cash_flow { get; set; }
-        public Net_cash_flow_continuing net_cash_flow_continuing { get; set; }
-        public Net_cash_flow_from_financing_activities net_cash_flow_from_financing_activities { get; set; }
-        public Net_cash_flow_from_financing_activities_continuing net_cash_flow_from_financing_activities_continuing { get; set; }
-        public Net_cash_flow_from_investing_activities net_cash_flow_from_investing_activities { get; set; }
-        public Net_cash_flow_from_investing_activities_continuing net_cash_flow_from_investing_activities_continuing { get; set; }
-        public Net_cash_flow_from_operating_activities net_cash_flow_from_operating_activities { get; set; }
-        public Net_cash_flow_from_operating_activities_continuing net_cash_flow_from_operating_activities_continuing { get; set; }
+        public RestStockFinancials_Datapoint exchange_gains_losses { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_continuing { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_financing_activities { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_financing_activities_continuing { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_investing_activities { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_investing_activities_continuing { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_operating_activities { get; set; }
+        public RestStockFinancials_Datapoint net_cash_flow_from_operating_activities_continuing { get; set; }
     }
     public class Comprehensive_income
     {
-        public Comprehensive_income_loss comprehensive_income_loss { get; set; }
-        public Comprehensive_income_loss_attributable_to_noncontrolling_interest comprehensive_income_loss_attributable_to_noncontrolling_interest { get; set; }
-        public Comprehensive_income_loss_attributable_to_parent comprehensive_income_loss_attributable_to_parent { get; set; }
-        public Other_comprehensive_income_loss other_comprehensive_income_loss { get; set; }
-        public Other_comprehensive_income_loss_attributable_to_parent other_comprehensive_income_loss_attributable_to_parent { get; set; }
+        public RestStockFinancials_Datapoint comprehensive_income_loss { get; set; }
+        public RestStockFinancials_Datapoint comprehensive_income_loss_attributable_to_noncontrolling_interest { get; set; }
+        public RestStockFinancials_Datapoint comprehensive_income_loss_attributable_to_parent { get; set; }
+        public RestStockFinancials_Datapoint other_comprehensive_income_loss { get; set; }
+        public RestStockFinancials_Datapoint other_comprehensive_income_loss_attributable_to_parent { get; set; }
     }
     public class Income_statement
     {
-        public Basic_earnings_per_share basic_earnings_per_share { get; set; }
-        public Benefits_costs_expenses benefits_costs_expenses { get; set; }
-        public Cost_of_revenue cost_of_revenue { get; set; }
-        public Costs_and_expenses costs_and_expenses { get; set; }
-        public Diluted_earnings_per_share diluted_earnings_per_share { get; set; }
-        public Gross_profit gross_profit { get; set; }
-        public Income_loss_from_continuing_operations_after_tax income_loss_from_continuing_operations_after_tax { get; set; }
-        public Income_loss_from_continuing_operations_before_tax income_loss_from_continuing_operations_before_tax { get; set; }
-        public Income_tax_expense_benefit income_tax_expense_benefit { get; set; }
-        public Interest_expense_operating interest_expense_operating { get; set; }
-        public Net_income_loss net_income_loss { get; set; }
-        public Net_income_loss_attributable_to_noncontrolling_interest net_income_loss_attributable_to_noncontrolling_interest { get; set; }
-        public Net_income_loss_attributable_to_parent net_income_loss_attributable_to_parent { get; set; }
-        public Net_income_loss_available_to_common_stockholders_basic net_income_loss_available_to_common_stockholders_basic { get; set; }
-        public Operating_expenses operating_expenses { get; set; }
-        public Operating_income_loss operating_income_loss { get; set; }
-        public Participating_securities_distributed_and_undistributed_earnings_loss_basic participating_securities_distributed_and_undistributed_earnings_loss_basic { get; set; }
-        public Preferred_stock_dividends_and_other_adjustments preferred_stock_dividends_and_other_adjustments { get; set; }
-        public Revenues revenues { get; set; }
-
+        public RestStockFinancials_Datapoint basic_earnings_per_share { get; set; }
+        public RestStockFinancials_Datapoint benefits_costs_expenses { get; set; }
+        public RestStockFinancials_Datapoint cost_of_revenue { get; set; }
+        public RestStockFinancials_Datapoint costs_and_expenses { get; set; }
+        public RestStockFinancials_Datapoint diluted_earnings_per_share { get; set; }
+        public RestStockFinancials_Datapoint gross_profit { get; set; }
+        public RestStockFinancials_Datapoint income_loss_from_continuing_operations_after_tax { get; set; }
+        public RestStockFinancials_Datapoint income_loss_from_continuing_operations_before_tax { get; set; }
+        public RestStockFinancials_Datapoint income_tax_expense_benefit { get; set; }
+        public RestStockFinancials_Datapoint interest_expense_operating { get; set; }
+        public RestStockFinancials_Datapoint net_income_loss { get; set; }
+        public RestStockFinancials_Datapoint net_income_loss_attributable_to_noncontrolling_interest { get; set; }
+        public RestStockFinancials_Datapoint net_income_loss_attributable_to_parent { get; set; }
+        public RestStockFinancials_Datapoint net_income_loss_available_to_common_stockholders_basic { get; set; }
+        public RestStockFinancials_Datapoint operating_expenses { get; set; }
+        public RestStockFinancials_Datapoint operating_income_loss { get; set; }
+        public RestStockFinancials_Datapoint participating_securities_distributed_and_undistributed_earnings_loss_basic { get; set; }
+        public RestStockFinancials_Datapoint preferred_stock_dividends_and_other_adjustments { get; set; }
+        public RestStockFinancials_Datapoint revenues { get; set; }
     }
-
-    #region Financial Datapoints
-
-    //
-    // These are all the datapoints returned for the different financial measures - they all inherit from the same class, I just kept them seperate for now in case something changes in the future.
-    //
 
     public abstract class RestStockFinancials_Datapoint
     {
@@ -1236,146 +1198,12 @@ namespace PolygonApiClient
         public string source { get; set; }
         public string[] derived_from { get; set; }
     }
-    public class Assets : RestStockFinancials_Datapoint
-    {
-    }
-    public class Current_assets : RestStockFinancials_Datapoint
-    {
-    }
-    public class Current_liabilities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Equity : RestStockFinancials_Datapoint
-    {
-    }
-    public class Equity_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
-    {
-    }
-    public class Equity_attributable_to_parent : RestStockFinancials_Datapoint
-    {
-    }
-    public class Liabilities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Liabilities_and_equity : RestStockFinancials_Datapoint
-    {
-    }
-    public class Noncurrent_assets : RestStockFinancials_Datapoint
-    {
-    }
-    public class Noncurrent_liabilities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Exchange_gains_losses : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_continuing : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_financing_activities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_financing_activities_continuing : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_investing_activities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_investing_activities_continuing : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_operating_activities : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_cash_flow_from_operating_activities_continuing : RestStockFinancials_Datapoint
-    {
-    }
-    public class Comprehensive_income_loss : RestStockFinancials_Datapoint
-    {
-    }
-    public class Comprehensive_income_loss_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
-    {
-    }
-    public class Comprehensive_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
-    {
-    }
-    public class Other_comprehensive_income_loss : RestStockFinancials_Datapoint
-    {
-    }
-    public class Other_comprehensive_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
-    {
-    }
-    public class Basic_earnings_per_share : RestStockFinancials_Datapoint
-    {
-    }
-    public class Benefits_costs_expenses : RestStockFinancials_Datapoint
-    {
-    }
-    public class Cost_of_revenue : RestStockFinancials_Datapoint
-    {
-    }
-    public class Costs_and_expenses : RestStockFinancials_Datapoint
-    {
-    }
-    public class Diluted_earnings_per_share : RestStockFinancials_Datapoint
-    {
-    }
-    public class Gross_profit : RestStockFinancials_Datapoint
-    {
-    }
-    public class Income_loss_from_continuing_operations_after_tax : RestStockFinancials_Datapoint
-    {
-    }
-    public class Income_loss_from_continuing_operations_before_tax : RestStockFinancials_Datapoint
-    {
-    }
-    public class Income_tax_expense_benefit : RestStockFinancials_Datapoint
-    {
-    }
-    public class Interest_expense_operating : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_income_loss : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_income_loss_attributable_to_noncontrolling_interest : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_income_loss_attributable_to_parent : RestStockFinancials_Datapoint
-    {
-    }
-    public class Net_income_loss_available_to_common_stockholders_basic : RestStockFinancials_Datapoint
-    {
-    }
-    public class Operating_expenses : RestStockFinancials_Datapoint
-    {
-    }
-    public class Operating_income_loss : RestStockFinancials_Datapoint
-    {
-    }
-    public class Participating_securities_distributed_and_undistributed_earnings_loss_basic : RestStockFinancials_Datapoint
-    {
-    }
-    public class Preferred_stock_dividends_and_other_adjustments : RestStockFinancials_Datapoint
-    {
-    }
-    public class Revenues : RestStockFinancials_Datapoint
-    {
-    }
-
-    #endregion
-
 
     //
     // Conditions
     //
-    public class RestConditions_Response : Rest_Response
+    public class RestConditions_Response : Rest_Response<RestConditions_Result>
     {
-        [JsonProperty("results")]
-        public RestConditions_Result[] Results { get; set; }
     }
     public class RestConditions_Result
     {
@@ -1440,10 +1268,8 @@ namespace PolygonApiClient
     //
     // Exchanges
     //
-    public class RestExchange_Response : Rest_Response
+    public class RestExchange_Response : Rest_Response<RestExchange_Result>
     {
-        [JsonProperty("results")]
-        public RestExchange_Result[] Results { get; set; }
     }
     public class RestExchange_Result
     {
@@ -1482,10 +1308,8 @@ namespace PolygonApiClient
     //
     // Option Contract (without an S - Market Data Endpoint)
     //
-    public class RestOptionContract_Response : Rest_Response
+    public class RestOptionContract_Response : Rest_Response<RestOptionContract_Result>
     {
-        [JsonProperty("results")]
-        public RestOptionContract_Result[] Results { get; set; }
     }
     public class RestOptionContract_Result
     {
@@ -1653,10 +1477,8 @@ namespace PolygonApiClient
     // Options Contract (WITH an S... Option[S] - Reference Data Endpoint) --> This object is used for both 'Options Contract' and 'Options Contract[S]' endpoints
     //
 
-    public class RestOptionsContract_Response : Rest_Response
+    public class RestOptionsContract_Response : Rest_Response<RestOptionsContract_Result>
     {
-        [JsonProperty("results")]
-        public RestOptionsContract_Result[] Results { get; set; }
     }
     public class RestOptionsContract_Result
     {
@@ -1709,10 +1531,8 @@ namespace PolygonApiClient
     // Options Chain
     //
 
-    public class RestOptionsChain_Response : Rest_Response
+    public class RestOptionsChain_Response : Rest_Response<RestOptionsChain_Result>
     {
-        [JsonProperty("results")]
-        public RestOptionsChainExpired_Result[] Results { get; set; }
     }
     public class RestOptionsChain_Result
     {
@@ -1760,7 +1580,6 @@ namespace PolygonApiClient
         [JsonProperty("midpoint")]
         public double Midpoint { get; set; }
     }
-
 
     #endregion
 
@@ -1894,37 +1713,5 @@ namespace PolygonApiClient
     }
 
     #endregion
-
-
-
-    public class RestOptionsChainExpired_Response : Rest_Response
-    {
-        public string request_id { get; set; }
-        public RestOptionsChainExpired_Result[] results { get; set; }
-        public string status { get; set; }
-    }
-    public class RestOptionsChainExpired_Result
-    {
-        public RestOptionsChainExpired_AdditionalUnderlyings[] additional_underlyings { get; set; }
-
-        public string cfi { get; set; }
-        public string contract_type { get; set; }
-        public int correction { get; set; }
-        public string exercise_style { get; set; }
-        public string expiration_date { get; set; }
-        public string primary_exchange { get; set; }
-        public int shares_per_contract { get; set; }
-        public double strike_price { get; set; }
-        public string ticker { get; set; }
-        public string underlying_ticker { get; set; }
-    }
-    public class RestOptionsChainExpired_AdditionalUnderlyings
-    {
-        public int amount { get; set; }
-        public string type { get; set; }
-        public string underlying { get; set; }
-
-    }
-
 
 }
