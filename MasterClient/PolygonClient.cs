@@ -81,6 +81,7 @@ namespace PolygonApiClient
         public PolygonClient(string apiKey, PolygonSubscriptionSettings subscriptionSettings)
         {
             API_Key = apiKey;
+
             SubscriptionSettings = subscriptionSettings;
 
             _initPolygonClients();
@@ -92,9 +93,9 @@ namespace PolygonApiClient
 
             restClient = new PolygonRestClient(API_Key);
 
-            socketClientStocks = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.stocks);
+            //socketClientStocks = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.stocks);
 
-            socketClientOptions = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.options);
+            //socketClientOptions = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.options);
         }
 
         #endregion
@@ -190,9 +191,9 @@ namespace PolygonApiClient
             PolygonTimespan timespan,
             DateTime from,
             DateTime to,
-            bool? adjusted,
-            PolygonSort? sort,
-            int? limit)
+            bool? adjusted = null,
+            PolygonSort? sort = null,
+            int? limit = null)
         {
             try
             {
@@ -218,8 +219,8 @@ namespace PolygonApiClient
 
         public async Task<RestGroupedDailyBars_Result[]> Grouped_Daily_Bars_Async(
             DateTime date,
-            bool? adjusted,
-            bool? include_otc)
+            bool? adjusted = null,
+            bool? include_otc = null)
         {
             try
             {
@@ -241,7 +242,7 @@ namespace PolygonApiClient
         public async Task<RestDailyOpenClose_Result> Daily_Open_Close_Async(
             string symbol,
             DateTime date,
-            bool? adjusted)
+            bool? adjusted = null)
         {
             try
             {
@@ -263,7 +264,7 @@ namespace PolygonApiClient
 
         public async Task<RestPreviousClose_Result[]> Previous_Close_Async(
             string symbol,
-            bool? adjusted)
+            bool? adjusted = null)
         {
             try
             {
@@ -283,26 +284,39 @@ namespace PolygonApiClient
 
         public async Task<RestTrades_Result[]> Trades_Async(
             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonOrder? order,
-            int? limit,
-            PolygonTradeQuoteSort? sort)
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonTradeQuoteSort? sort = null)
         {
             try
             {
                 // Normalize parameters
                 symbol = NormalizeSymbol(symbol);
-                long? _timestamp = timestamp?.ESTToUnixNanoseconds() ?? null;
 
-                // Call async request method
-                return await restClient.Trades_Async(
-                    symbol,
-                    _timestamp,
-                    timestampFilter,
-                    order,
-                    limit,
-                    sort);
+                // If the timestamp is anything other than a date (has a non-default time component), convert to nanoseconds and send
+                if (timestamp.HasValue && timestamp.Value.TimeOfDay != TimeSpan.Zero)
+                {
+                    long? _timestamp = timestamp?.ESTToUnixNanoseconds() ?? null;
+
+                    // Call async request method
+                    return await restClient.Trades_Async(
+                        symbol,
+                        _timestamp,
+                        timestampFilter,
+                        order,
+                        limit,
+                        sort);
+                }
+                else
+                    return await restClient.Trades_Async(
+                       symbol,
+                       timestamp.HasValue ? timestamp.Value.ToString("yyyy-MM-dd") : null,
+                       timestampFilter,
+                       order,
+                       limit,
+                       sort);
             }
             catch (Exception ex)
             {
@@ -310,7 +324,7 @@ namespace PolygonApiClient
             }
         }
 
-        public async Task<RestLastTrade_Result[]> Last_Trade_Async(
+        public async Task<RestLastTrade_Result> Last_Trade_Async(
             string symbol)
         {
             try
@@ -330,26 +344,39 @@ namespace PolygonApiClient
 
         public async Task<RestQuotes_Result[]> Quotes_Async(
             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonOrder? order,
-            int? limit,
-            PolygonTradeQuoteSort? sort)
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonTradeQuoteSort? sort = null)
         {
             try
             {
                 // Normalize parameters
                 symbol = NormalizeSymbol(symbol);
-                long? _timestamp = timestamp?.ESTToUnixNanoseconds() ?? null;
 
-                // Call async request method
-                return await restClient.Quotes_Async(
-                    symbol,
-                    _timestamp,
-                    timestampFilter,
-                    order,
-                    limit,
-                    sort);
+                // If the timestamp is anything other than a date (has a non-default time component), convert to nanoseconds and send
+                if (timestamp.HasValue && timestamp.Value.TimeOfDay != TimeSpan.Zero)
+                {
+                    long? _timestamp = timestamp?.ESTToUnixNanoseconds() ?? null;
+
+                    // Call async request method
+                    return await restClient.Quotes_Async(
+                        symbol,
+                        _timestamp,
+                        timestampFilter,
+                        order,
+                        limit,
+                        sort);
+                }
+                else
+                    return await restClient.Quotes_Async(
+                       symbol,
+                       timestamp.HasValue ? timestamp.Value.ToString("yyyy-MM-dd") : null,
+                       timestampFilter,
+                       order,
+                       limit,
+                       sort);
             }
             catch (Exception ex)
             {
@@ -357,7 +384,7 @@ namespace PolygonApiClient
             }
         }
 
-        public async Task<RestLastQuote_Result[]> Last_Quote_Async(
+        public async Task<RestLastQuote_Result> Last_Quote_Async(
             string symbol)
         {
             try
@@ -379,8 +406,8 @@ namespace PolygonApiClient
         // ---------- Snapshots ----------
 
         public async Task<RestTickerSnapshot_Result[]> All_Tickers_Async(
-            List<string> tickers,
-            bool? include_otc)
+            List<string> tickers = null,
+            bool? include_otc = null)
         {
             try
             {
@@ -388,12 +415,15 @@ namespace PolygonApiClient
 
                 // Create a CSV string of tickers to pass
                 StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < tickers.Count; i++)
-                {
-                    sb.Append(NormalizeSymbol(tickers[i]));
-                    if (i + 1 < tickers.Count)
-                        sb.Append(",");
-                }
+
+                if (tickers != null)
+                    for (int i = 0; i < tickers.Count; i++)
+                    {
+                        sb.Append(NormalizeSymbol(tickers[i]));
+                        if (i + 1 < tickers.Count)
+                            sb.Append(",");
+                    }
+
                 string tickerList = sb.ToString();
 
                 // Call async request method
@@ -409,7 +439,7 @@ namespace PolygonApiClient
 
         public async Task<RestTickerSnapshot_Result[]> Gainers_Losers_Async(
             PolygonGainersLosers direction,
-            bool? include_otc)
+            bool? include_otc = null)
         {
             try
             {
@@ -437,7 +467,7 @@ namespace PolygonApiClient
             return result[0];
         }
 
-        public async Task<RestOptionContract_Result[]> Option_Contract_Async(
+        public async Task<RestOptionContract_Result> Option_Contract_Async(
             string underlyingAsset,
             string optionContract)
         {
@@ -459,14 +489,14 @@ namespace PolygonApiClient
         }
         public async Task<RestOptionsChain_Result[]> Options_Chain_Async(
             string underlyingAsset,
-            double? strike_price,
-            PolygonFilterParams? strikePriceFilter,
-            DateTime? expirationDate,
-            PolygonFilterParams? expirationDateFilter,
-            OptionType? contract_type,
-            PolygonOrder? order,
-            int? limit,
-            PolygonOptionsChainSort? sort)
+            double? strike_price = null,
+            PolygonFilterParams? strikePriceFilter = null,
+            DateTime? expirationDate = null,
+            PolygonFilterParams? expirationDateFilter = null,
+            OptionType? contract_type = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonOptionsChainSort? sort = null)
         {
             try
             {
@@ -502,15 +532,15 @@ namespace PolygonApiClient
 
         public async Task<RestMovingAverage_Result[]> Simple_Moving_Average_Async(
             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonTimespan? timespan,
-            int? window,
-            PolygonAggregateSeriesType? series_type,
-            PolygonOrder? order,
-            bool? expand_underlying,
-            bool? adjusted,
-            int? limit)
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonTimespan? timespan = null,
+            int? window = null,
+            PolygonAggregateSeriesType? series_type = null,
+            PolygonOrder? order = null,
+            bool? expand_underlying = null,
+            bool? adjusted = null,
+            int? limit = null)
         {
             try
             {
@@ -541,16 +571,16 @@ namespace PolygonApiClient
         }
 
         public async Task<RestMovingAverage_Result[]> Exponential_Moving_Average_Async(
-             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonTimespan? timespan,
-            int? window,
-            PolygonAggregateSeriesType? series_type,
-            PolygonOrder? order,
-            bool? expand_underlying,
-            bool? adjusted,
-            int? limit)
+            string symbol,
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonTimespan? timespan = null,
+            int? window = null,
+            PolygonAggregateSeriesType? series_type = null,
+            PolygonOrder? order = null,
+            bool? expand_underlying = null,
+            bool? adjusted = null,
+            int? limit = null)
         {
             try
             {
@@ -582,17 +612,17 @@ namespace PolygonApiClient
 
         public async Task<RestMACD_Result[]> Moving_Average_Convergence_Divergence_Async(
             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonTimespan? timespan,
-            bool? adjusted,
-            int? short_window,
-            int? long_window,
-            int? signal_window,
-            PolygonAggregateSeriesType? series_type,
-            bool? expand_underlying,
-            PolygonOrder? order,
-            int? limit)
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonTimespan? timespan = null,
+            bool? adjusted = null,
+            int? short_window = null,
+            int? long_window = null,
+            int? signal_window = null,
+            PolygonAggregateSeriesType? series_type = null,
+            bool? expand_underlying = null,
+            PolygonOrder? order = null,
+            int? limit = null)
         {
             try
             {
@@ -626,14 +656,14 @@ namespace PolygonApiClient
 
         public async Task<RestRSI_Result[]> Relative_Strength_Index_Async(
             string symbol,
-            DateTime? timestamp,
-            PolygonFilterParams? timestampFilter,
-            PolygonTimespan? timespan,
-            int? window,
-            PolygonAggregateSeriesType? series_type,
-            bool? expand_underlying,
-            PolygonOrder? order,
-            int? limit)
+            DateTime? timestamp = null,
+            PolygonFilterParams? timestampFilter = null,
+            PolygonTimespan? timespan = null,
+            int? window = null,
+            PolygonAggregateSeriesType? series_type = null,
+            bool? expand_underlying = null,
+            PolygonOrder? order = null,
+            int? limit = null)
         {
             try
             {
@@ -666,9 +696,9 @@ namespace PolygonApiClient
 
         #region -------------------- Polygon REST API Reference Data Endpoints --------------------
 
-        public async Task<RestOptionsContract_Result[]> Options_Contract_Async(
+        public async Task<RestOptionsContract_Result> Options_Contract_Async(
             string options_ticker,
-            DateTime? as_of)
+            DateTime? as_of = null)
         {
             try
             {
@@ -692,18 +722,18 @@ namespace PolygonApiClient
         }
 
         public async Task<RestOptionsContract_Result[]> Options_Contracts_Async(
-            string underlying_ticker,
-            PolygonFilterParams? underlyingTickerFilter,
-            OptionType? contract_type,
-            DateTime? expiration_date,
-            PolygonFilterParams? expirationDateFilter,
-            DateTime? as_of,
-            double? strike_price,
-            PolygonFilterParams? strikePriceFilter,
-            bool? expired,
-            PolygonOrder? order,
-            int? limit,
-            PolygonOptionsContractsSort? sort
+            string underlying_ticker = null,
+            PolygonFilterParams? underlyingTickerFilter = null,
+            OptionType? contract_type = null,
+            DateTime? expiration_date = null,
+            PolygonFilterParams? expirationDateFilter = null,
+            DateTime? as_of = null,
+            double? strike_price = null,
+            PolygonFilterParams? strikePriceFilter = null,
+            bool? expired = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonOptionsContractsSort? sort = null
             )
         {
             try
@@ -736,19 +766,19 @@ namespace PolygonApiClient
         }
 
         public async Task<RestTickers_Result[]> Tickers_Async(
-            string ticker,
-            PolygonFilterParams? tickerFilter,
-            PolygonTickerType? type,
-            PolygonMarket? market,
-            string exchange,
-            string CUSIP,
-            string CIK,
-            DateTime? date,
-            string search,
-            bool? active,
-            PolygonOrder? order,
-            int? limit,
-            PolygonTickerSort? sort
+            string ticker = null,
+            PolygonFilterParams? tickerFilter = null,
+            PolygonTickerType? type = null,
+            PolygonMarket? market = null,
+            string exchange = null,
+            string CUSIP = null,
+            string CIK = null,
+            DateTime? date = null,
+            string search = null,
+            bool? active = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonTickerSort? sort = null
             )
         {
             try
@@ -780,9 +810,9 @@ namespace PolygonApiClient
             }
         }
 
-        public async Task<RestTickerDetail_Result[]> Ticker_Details_Async(
+        public async Task<RestTickerDetail_Result> Ticker_Details_Async(
             string ticker,
-            DateTime? date
+            DateTime? date = null
             )
         {
             try
@@ -813,9 +843,9 @@ namespace PolygonApiClient
         /// <param name="types">A comma-separated list of the types of event to include. Currently ticker_change is the only supported event_type. Leave blank to return all supported event_types.</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<RestTickerEvents_Result[]> Ticker_Events_Async(
+        public async Task<RestTickerEvents_Result> Ticker_Events_Async(
             string id,
-            List<string> types)
+            List<string> types = null)
         {
             try
             {
@@ -829,17 +859,18 @@ namespace PolygonApiClient
 
                 string _types = null;
 
-                if (types.Count > 0)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < types.Count; i++)
+                if (types != null)
+                    if (types.Count > 0)
                     {
-                        sb.Append(types[i]);
-                        if (i + 1 < types.Count)
-                            sb.Append(",");
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < types.Count; i++)
+                        {
+                            sb.Append(types[i]);
+                            if (i + 1 < types.Count)
+                                sb.Append(",");
+                        }
+                        _types = sb.ToString();
                     }
-                    _types = sb.ToString();
-                }
 
                 // Call async request method
                 return await restClient.Ticker_Events_Async(
@@ -853,20 +884,21 @@ namespace PolygonApiClient
         }
 
         public async Task<RestTickerNews_Result[]> Ticker_News_Async(
-            string ticker,
-            PolygonFilterParams? tickerFilter,
-            DateTime? published_utc,
-            PolygonFilterParams? publishedUtcFilter,
-            PolygonOrder? order,
-            int? limit,
-            PolygonNewsSort? sort)
+            string ticker = null,
+            PolygonFilterParams? tickerFilter = null,
+            DateTime? published_utc = null,
+            PolygonFilterParams? publishedUtcFilter = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonNewsSort? sort = null)
         {
             try
             {
                 // Normalize parameters
 
                 // Can be a ticker, CUSIP, or FIGI... don't have anything to handle the latter 2 yet
-                ticker = NormalizeSymbol(ticker);
+                if (ticker != null)
+                    ticker = NormalizeSymbol(ticker);
 
                 string _published_utc = published_utc.HasValue ? published_utc.Value.ToString("yyyy-MM-dd") : null;
 
@@ -887,8 +919,8 @@ namespace PolygonApiClient
         }
 
         public async Task<RestTickerTypes_Result[]> Ticker_Types_Async(
-            PolygonMarket? asset_class,
-            PolygonLocale? locale)
+            PolygonMarket? asset_class = null,
+            PolygonLocale? locale = null)
         {
             try
             {
@@ -903,7 +935,7 @@ namespace PolygonApiClient
             }
         }
 
-        public async Task<RestMarketHolidays_Response> Market_Holidays_Async()
+        public async Task<RestMarketHolidays_Result[]> Market_Holidays_Async()
         {
             try
             {
@@ -930,14 +962,14 @@ namespace PolygonApiClient
         }
 
         public async Task<RestStockSplits_Result[]> Stock_Splits_Async(
-            string ticker,
-            PolygonFilterParams? tickerFilter,
-            DateTime? execution_date,
-            PolygonFilterParams? executionDateFilter,
-            bool? reverse_split,
-            PolygonOrder? order,
-            int? limit,
-            PolygonStockSplitSort? sort
+            string ticker = null,
+            PolygonFilterParams? tickerFilter = null,
+            DateTime? execution_date = null,
+            PolygonFilterParams? executionDateFilter = null,
+            bool? reverse_split = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonStockSplitSort? sort = null
             )
         {
             try
@@ -963,24 +995,25 @@ namespace PolygonApiClient
                 throw ex;
             }
         }
+
         public async Task<RestDividends_Result[]> Dividends_Async(
-            string ticker,
-            PolygonFilterParams? tickerFilter,
-            DateTime? ex_dividend_date,
-            PolygonFilterParams? exDateFilter,
-            DateTime? record_date,
-            PolygonFilterParams? recordDateFilter,
-            DateTime? declaration_date,
-            PolygonFilterParams? declarationDateFilter,
-            DateTime? pay_date,
-            PolygonFilterParams? payDateFilter,
-            PolygonDividendFrequency? frequency,
-            double? cash_amount,
-            PolygonFilterParams? cashAmountFilter,
-            PolygonDividendType? dividend_type,
-            PolygonSort? order,
-            int? limit,
-            PolygonDividendSort? sort
+            string ticker = null,
+            PolygonFilterParams? tickerFilter = null,
+            DateTime? ex_dividend_date = null,
+            PolygonFilterParams? exDateFilter = null,
+            DateTime? record_date = null,
+            PolygonFilterParams? recordDateFilter = null,
+            DateTime? declaration_date = null,
+            PolygonFilterParams? declarationDateFilter = null,
+            DateTime? pay_date = null,
+            PolygonFilterParams? payDateFilter = null,
+            PolygonDividendFrequency? frequency = null,
+            double? cash_amount = null,
+            PolygonFilterParams? cashAmountFilter = null,
+            PolygonDividendType? dividend_type = null,
+            PolygonSort? order = null,
+            int? limit = null,
+            PolygonDividendSort? sort = null
             )
         {
             try
@@ -1020,18 +1053,18 @@ namespace PolygonApiClient
         }
 
         public async Task<RestStockFinancials_Result[]> Stock_Financials_Async(
-            string ticker,
-            string cik,
-            string company_name,
-            PolygonCompanyNameFilter? companyNameFilter,
-            string sic,
-            DateTime? filing_date,
-            PolygonFilterParams? filingDateFilter,
-            PolygonFinancialsTimeframe? timeframe,
-            bool? include_sources,
-            PolygonOrder? order,
-            int? limit,
-            PolygonFinancialsSort? sort
+            string ticker = null,
+            string cik = null,
+            string company_name = null,
+            PolygonCompanyNameFilter? companyNameFilter = null,
+            string sic = null,
+            DateTime? filing_date = null,
+            PolygonFilterParams? filingDateFilter = null,
+            PolygonFinancialsTimeframe? timeframe = null,
+            bool? include_sources = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonFinancialsSort? sort = null
             )
         {
             try
@@ -1063,13 +1096,13 @@ namespace PolygonApiClient
         }
 
         public async Task<RestConditions_Result[]> Conditions_Async(
-            PolygonMarket? asset_class,
-            PolygonConditionCodeDataType? data_type,
-            int? id,
-            int? sip,
-            PolygonOrder? order,
-            int? limit,
-            PolygonConditionsSort? sort
+            PolygonMarket? asset_class = null,
+            PolygonConditionCodeDataType? data_type = null,
+            int? id = null,
+            int? sip = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonConditionsSort? sort = null
             )
         {
             try
@@ -1091,8 +1124,8 @@ namespace PolygonApiClient
         }
 
         public async Task<RestExchange_Result[]> Exchanges_Async(
-            PolygonMarket? asset_class,
-            PolygonLocale? locale)
+            PolygonMarket? asset_class = null,
+            PolygonLocale? locale = null)
         {
             try
             {

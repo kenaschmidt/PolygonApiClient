@@ -144,7 +144,8 @@ namespace PolygonApiClient
 
             StringBuilder sb = new StringBuilder();
 
-            sb.Append("?");
+            if (values.Where(x => x.value != null).Count() > 0)
+                sb.Append("?");
 
             for (int i = 0; i < values.Length; i++)
             {

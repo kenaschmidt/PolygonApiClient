@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolygonApiClient", "Polygon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "..\UnitTestProject1\UnitTestProject1.csproj", "{2F47E89E-5D01-4D1E-AD49-139A4B570B46}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolygonApiClientTestHarness", "..\PolygonApiClientTestHarness\PolygonApiClientTestHarness.csproj", "{D603A8FD-AEAA-46C4-9912-03F2DA9BA910}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D603A8FD-AEAA-46C4-9912-03F2DA9BA910}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D603A8FD-AEAA-46C4-9912-03F2DA9BA910}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D603A8FD-AEAA-46C4-9912-03F2DA9BA910}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D603A8FD-AEAA-46C4-9912-03F2DA9BA910}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace PolygonApiClient
@@ -41,7 +42,7 @@ namespace PolygonApiClient
         public string Status { get; set; }
 
         [JsonProperty("results")]
-        public T[] Results { get; set; }
+        public virtual T Results { get; set; }
     }
 
     #region REST Market Data Endpoint Objects
@@ -49,7 +50,7 @@ namespace PolygonApiClient
     //
     // Stock Aggregate Bars
     //
-    public class RestAggregatesBars_Response : Rest_Response<RestAggregatesBars_Result>
+    public class RestAggregatesBars_Response : Rest_Response<RestAggregatesBars_Result[]>
     {
         [JsonProperty("ticker")]
         public string Ticker { get; set; }
@@ -97,7 +98,7 @@ namespace PolygonApiClient
     //
     // Stock Grouped Daily Bars
     //
-    public class RestGroupedDailyBars_Response : Rest_Response<RestGroupedDailyBars_Result>
+    public class RestGroupedDailyBars_Response : Rest_Response<RestGroupedDailyBars_Result[]>
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -180,7 +181,7 @@ namespace PolygonApiClient
     //
     // Stock Previous Close
     //
-    public class RestPreviousClose_Response : Rest_Response<RestPreviousClose_Result>
+    public class RestPreviousClose_Response : Rest_Response<RestPreviousClose_Result[]>
     {
         [JsonProperty("adjusted")]
         public bool Adjusted { get; set; }
@@ -196,6 +197,9 @@ namespace PolygonApiClient
     }
     public class RestPreviousClose_Result
     {
+        [JsonProperty("T")]
+        public string Symbol { get; set; }
+
         [JsonProperty("o")]
         public double Open { get; set; }
 
@@ -224,7 +228,7 @@ namespace PolygonApiClient
     //
     // Stock Trades
     //
-    public class RestTrades_Response : Rest_Response<RestTrades_Result>
+    public class RestTrades_Response : Rest_Response<RestTrades_Result[]>
     {
     }
     public class RestTrades_Result
@@ -260,7 +264,7 @@ namespace PolygonApiClient
         public int TRF_ID { get; set; }
 
         [JsonProperty("size")]
-        public int Size { get; set; }
+        public Int64 Size { get; set; }
 
         [JsonProperty("tape")]
         public int Tape { get; set; } // Only for Stocks
@@ -317,7 +321,7 @@ namespace PolygonApiClient
     //
     // Stock Quotes
     //
-    public class RestQuotes_Response : Rest_Response<RestQuotes_Result>
+    public class RestQuotes_Response : Rest_Response<RestQuotes_Result[]>
     {
     }
     public class RestQuotes_Result
@@ -416,10 +420,10 @@ namespace PolygonApiClient
     //
     // Snapshots - These models are used for 'All Tickers', 'Gainers/Losers', and 'Ticker'
     //
-    public class RestTickerSnapshot_Response : Rest_Response<RestTickerSnapshot_Result>
+    public class RestTickerSnapshot_Response : Rest_Response<RestTickerSnapshot_Result[]>
     {
         [JsonProperty("tickers")]
-        public RestTickerSnapshot_Result[] Result { get; set; }
+        public override RestTickerSnapshot_Result[] Results { get; set; }
     }
     public class RestTickerSnapshot_Result
     {
@@ -570,10 +574,15 @@ namespace PolygonApiClient
         public bool IsOTC { get; set; }
     }
 
+    //
+    // Needed to designate a few 
+    //
+    public interface IResult_Special { }
+
     // 
     // Technical Indicators - SMA and EMA
     //
-    public class RestMovingAverage_Response : Rest_Response<RestMovingAverage_Result>
+    public class RestMovingAverage_Response : Rest_Response<RestMovingAverage_Result>, IResult_Special
     {
     }
     public class RestMovingAverage_Result
@@ -596,7 +605,7 @@ namespace PolygonApiClient
     //
     // Technical Indicators - MACD
     //
-    public class RestMACD_Response : Rest_Response<RestMACD_Result>
+    public class RestMACD_Response : Rest_Response<RestMACD_Result>, IResult_Special
     {
     }
     public class RestMACD_Result
@@ -625,7 +634,7 @@ namespace PolygonApiClient
     //
     // Technical Indictor - Relative Strength Index
     //
-    public class RestRSI_Response : Rest_Response<RestRSI_Result>
+    public class RestRSI_Response : Rest_Response<RestRSI_Result>, IResult_Special
     {
     }
     public class RestRSI_Result
@@ -695,7 +704,7 @@ namespace PolygonApiClient
     //
     // Tickers
     //
-    public class RestTickers_Response : Rest_Response<RestTickers_Result>
+    public class RestTickers_Response : Rest_Response<RestTickers_Result[]>
     {
     }
     public class RestTickers_Result
@@ -806,10 +815,10 @@ namespace PolygonApiClient
         public int Share_Class_Shares_Outstanding { get; set; }
 
         [JsonProperty("sic_code")]
-        public int SIC_Code { get; set; }
+        public string SIC_Code { get; set; }
 
         [JsonProperty("sic_description")]
-        public int SIC_Description { get; set; }
+        public string SIC_Description { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -874,7 +883,7 @@ namespace PolygonApiClient
     //
     // Ticker News
     //
-    public class RestTickerNews_Response : Rest_Response<RestTickerNews_Result>
+    public class RestTickerNews_Response : Rest_Response<RestTickerNews_Result[]>
     {
     }
     public class RestTickerNews_Result
@@ -931,7 +940,7 @@ namespace PolygonApiClient
     //
     // Ticker Types
     //
-    public class RestTickerTypes_Response : Rest_Response<RestTickerTypes_Result>
+    public class RestTickerTypes_Response : Rest_Response<RestTickerTypes_Result[]>
     {
     }
     public class RestTickerTypes_Result
@@ -953,7 +962,7 @@ namespace PolygonApiClient
     //
     // Market Holidays
     //
-    public class RestMarketHolidays_Response
+    public class RestMarketHolidays_Result
     {
         [JsonProperty("close")]
         public string Closing_Time { get; set; }
@@ -986,7 +995,7 @@ namespace PolygonApiClient
         public bool Is_Premarket { get; set; }
 
         [JsonProperty("currencies")]
-        public string[] Currency_Markets_Status { get; set; }
+        public RestMarketStatus_Currencies Currency_Markets_Status { get; set; }
 
         [JsonProperty("exchanges")]
         public RestMarketStatus_Exchanges Exchanges { get; set; }
@@ -1056,7 +1065,7 @@ namespace PolygonApiClient
     //
     // Stock Splits V3
     //
-    public class RestStockSplits_Response : Rest_Response<RestStockSplits_Result>
+    public class RestStockSplits_Response : Rest_Response<RestStockSplits_Result[]>
     {
     }
     public class RestStockSplits_Result
@@ -1077,7 +1086,7 @@ namespace PolygonApiClient
     //
     // Dividends V3
     //
-    public class RestDividends_Response : Rest_Response<RestDividends_Result>
+    public class RestDividends_Response : Rest_Response<RestDividends_Result[]>
     {
     }
     public class RestDividends_Result
@@ -1110,7 +1119,7 @@ namespace PolygonApiClient
     //
     // Stock Financials (Experimental)
     //
-    public class RestStockFinancials_Response : Rest_Response<RestStockFinancials_Result>
+    public class RestStockFinancials_Response : Rest_Response<RestStockFinancials_Result[]>
     {
     }
     public class RestStockFinancials_Result
@@ -1189,12 +1198,12 @@ namespace PolygonApiClient
         public RestStockFinancials_Datapoint revenues { get; set; }
     }
 
-    public abstract class RestStockFinancials_Datapoint
+    public class RestStockFinancials_Datapoint
     {
         public string label { get; set; }
         public int order { get; set; }
         public string unit { get; set; }
-        public int value { get; set; }
+        public Int64 value { get; set; }
         public string source { get; set; }
         public string[] derived_from { get; set; }
     }
@@ -1202,7 +1211,7 @@ namespace PolygonApiClient
     //
     // Conditions
     //
-    public class RestConditions_Response : Rest_Response<RestConditions_Result>
+    public class RestConditions_Response : Rest_Response<RestConditions_Result[]>
     {
     }
     public class RestConditions_Result
@@ -1268,7 +1277,7 @@ namespace PolygonApiClient
     //
     // Exchanges
     //
-    public class RestExchange_Response : Rest_Response<RestExchange_Result>
+    public class RestExchange_Response : Rest_Response<RestExchange_Result[]>
     {
     }
     public class RestExchange_Result
@@ -1355,7 +1364,7 @@ namespace PolygonApiClient
         public double High { get; set; }
 
         [JsonProperty("last_updated")]
-        public int Last_Updated { get; set; }
+        public long Last_Updated_Ns { get; set; }
 
         [JsonProperty("low")]
         public double Low { get; set; }
@@ -1387,7 +1396,7 @@ namespace PolygonApiClient
         public int Shares_Per_Contract { get; set; }
 
         [JsonProperty("strike_price")]
-        public int Strike_Price { get; set; }
+        public double Strike_Price { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -1427,7 +1436,7 @@ namespace PolygonApiClient
         public int Bid_Size { get; set; }
 
         [JsonProperty("last_updated")]
-        public int Last_Updated { get; set; }
+        public long Last_Updated_Ns { get; set; }
 
         [JsonProperty("midpoint")]
         public double Midpoint { get; set; }
@@ -1447,7 +1456,7 @@ namespace PolygonApiClient
         public double Price { get; set; }
 
         [JsonProperty("sip_timestamp")]
-        public int SIP_Timestamp { get; set; }
+        public long SIP_Timestamp_Ns { get; set; }
 
         [JsonProperty("size")]
         public int Size { get; set; }
@@ -1461,7 +1470,7 @@ namespace PolygonApiClient
         public double Change_To_BreakEven { get; set; }
 
         [JsonProperty("last_updated")]
-        public int Last_Updated { get; set; }
+        public long Last_Updated_Ns { get; set; }
 
         [JsonProperty("price")]
         public double Price { get; set; }
@@ -1474,10 +1483,13 @@ namespace PolygonApiClient
     }
 
     //
-    // Options Contract (WITH an S... Option[S] - Reference Data Endpoint) --> This object is used for both 'Options Contract' and 'Options Contract[S]' endpoints
+    // OptionsContract and OptionsContrac[s] differ because one call returns a single Result object and the other returns an array of the same result object.
     //
 
     public class RestOptionsContract_Response : Rest_Response<RestOptionsContract_Result>
+    {
+    }
+    public class RestOptionsContracts_Response : Rest_Response<RestOptionsContract_Result[]>
     {
     }
     public class RestOptionsContract_Result
@@ -1504,7 +1516,7 @@ namespace PolygonApiClient
         public int Shares_Per_Contract { get; set; }
 
         [JsonProperty("strike_price")]
-        public int Strik_Price { get; set; }
+        public double Strik_Price { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -1531,7 +1543,7 @@ namespace PolygonApiClient
     // Options Chain
     //
 
-    public class RestOptionsChain_Response : Rest_Response<RestOptionsChain_Result>
+    public class RestOptionsChain_Response : Rest_Response<RestOptionsChain_Result[]>
     {
     }
     public class RestOptionsChain_Result
