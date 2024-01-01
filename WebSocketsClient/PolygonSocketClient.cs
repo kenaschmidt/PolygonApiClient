@@ -13,37 +13,6 @@ namespace PolygonApiClient.WebSocketsClient
 {
     public class PolygonSocketClient
     {
-        public double FrameSizeMbMax { get; } = 10;
-        public double FrameSizeMbMin { get; } = .01;
-
-        public const string BaseUri = "wss://socket.polygon.io/";
-
-        private const int BytesInMb = 1024 * 1024;
-
-        private double _FrameSizeMb { get; set; } = .1;
-        public double FrameSizeMb
-        {
-            get => _FrameSizeMb;
-            set
-            {
-                _FrameSizeMb = Math.Min(FrameSizeMbMax, value);
-                _FrameSizeMb = Math.Max(FrameSizeMbMin, value);
-            }
-        }
-
-        private int _BufferFrameSize
-        {
-            get => (int)(FrameSizeMb * BytesInMb);
-        }
-
-        private System.Net.WebSockets.ClientWebSocket client { get; } = new ClientWebSocket();
-
-        public PolygonConnectionEndpoint Endpoint { get; }
-        private Uri connectionPath { get; }
-        private string APIKey { get; }
-
-        public bool Connected { get; private set; } = false;
-
         #region Client Events
 
         public event EventHandler Opened;
@@ -72,12 +41,54 @@ namespace PolygonApiClient.WebSocketsClient
 
         #endregion
 
+        #region Socket Frame Settings
+
+        public double FrameSizeMbMax { get; } = 10;
+        public double FrameSizeMbMin { get; } = .01;
+
+        private const int BytesInMb = 1048576;
+
+        private double _FrameSizeMb { get; set; } = .1;
+        public double FrameSizeMb
+        {
+            get => _FrameSizeMb;
+            set
+            {
+                _FrameSizeMb = Math.Min(FrameSizeMbMax, value);
+                _FrameSizeMb = Math.Max(FrameSizeMbMin, value);
+            }
+        }
+
+        private int _BufferFrameSize
+        {
+            get => (int)(FrameSizeMb * BytesInMb);
+        }
+
+        #endregion
+
+        public string Name { get; private set; }
+
+        public PolygonConnectionEndpoint Endpoint { get; }
+
+        public bool Connected { get; private set; } = false;
+
+        public const string BaseUri = "wss://socket.polygon.io/";
+
+        private ClientWebSocket client { get; } = new ClientWebSocket();
+
+        private Uri connectionPath { get; }
+
+        private string APIKey { get; }
+
         public PolygonSocketClient(string apiKey, PolygonConnectionEndpoint endpoint)
         {
             Endpoint = endpoint;
+            Name = endpoint.ToString();
             connectionPath = new Uri($"{BaseUri}{endpoint.ToString()}");
             APIKey = apiKey;
         }
+
+        #region Connection Management
 
         /// <summary>
         /// Opens the WebSockets connection
@@ -114,6 +125,10 @@ namespace PolygonApiClient.WebSocketsClient
             }
         }
 
+        #endregion
+
+        #region Socket Message Processing
+
         /// <summary>
         /// Send a property formatted Polygon message string
         /// </summary>
@@ -140,52 +155,53 @@ namespace PolygonApiClient.WebSocketsClient
             try
             {
                 new Thread(async () =>
-                  {
-                      // Create a new buffer to receive messages
-                      var buffer = getReceiveBuffer();
+                {
+                    // Create a new buffer to receive messages
+                    var buffer = getReceiveBuffer();
 
-                      // Continue listening while connected
-                      while (client.State == System.Net.WebSockets.WebSocketState.Open)
-                      {
-                          // Clear the contents of the buffer
-                          clearReceiveBuffer(buffer);
+                    // Continue listening while connected
+                    while (client.State == System.Net.WebSockets.WebSocketState.Open)
+                    {
+                        // Clear the contents of the buffer
+                        clearReceiveBuffer(buffer);
 
-                          // Wait for the remote host to send a message
-                          var result = await client.ReceiveAsync(buffer, CancellationToken.None);
+                        // Wait for the remote host to send a message
+                        var result = await client.ReceiveAsync(buffer, CancellationToken.None);
 
-                          // Read the buffer to a string
-                          string msg = System.Text.Encoding.Default.GetString(buffer.TakeWhile(x => x != '\0').ToArray());
+                        // Read the buffer to a string
+                        string msg = System.Text.Encoding.Default.GetString(buffer.TakeWhile(x => x != '\0').ToArray());
 
-                          // If the message is fragmented, continue reading
-                          while (!result.EndOfMessage)
-                          {
-                              // Continue to receive chunked message
-                              clearReceiveBuffer(buffer);
-                              result = await client.ReceiveAsync(buffer, CancellationToken.None);
+                        // If the message is fragmented, continue reading
+                        while (!result.EndOfMessage)
+                        {
+                            // Continue to receive chunked message
+                            clearReceiveBuffer(buffer);
+                            result = await client.ReceiveAsync(buffer, CancellationToken.None);
 
-                              // Concatenate to message received so far
-                              msg += System.Text.Encoding.Default.GetString(buffer.TakeWhile(x => x != '\0').ToArray());
-                          }
+                            // Concatenate to message received so far
+                            msg += System.Text.Encoding.Default.GetString(buffer.TakeWhile(x => x != '\0').ToArray());
+                        }
 
-                          // Handle initialization messages
-                          if (msg.Contains("Connected Successfully"))
-                          {
-                              // Send the API key
-                              await sendAuthorizationMessage();
-                          }
-                          else if (msg.Contains("authenticated"))
-                          {
-                              // Signal a completed initialization
-                              Connected = true;
-                              OnOpened();
-                          }
-                          else
-                          {
-                              // Send all normally formatted messages to be processed
-                              processMessage(msg);
-                          }
-                      };
-                  })
+                        // Handle initialization messages
+                        if (msg.Contains("Connected Successfully"))
+                        {
+                            // Send the API key
+                            await sendAuthorizationMessage();
+                        }
+                        else if (msg.Contains("authenticated"))
+                        {
+                            // Signal a completed initialization
+                            Connected = true;
+
+                            OnOpened();
+                        }
+                        else
+                        {
+                            // Send all normally formatted messages to be processed
+                            processMessage(msg);
+                        }
+                    };
+                })
                 { IsBackground = true }.Start();
             }
             catch (Exception ex)
@@ -203,6 +219,7 @@ namespace PolygonApiClient.WebSocketsClient
         private void processMessage(string message)
         {
             var objs = JsonConvert.DeserializeObject<JArray>(message);
+
             foreach (var obj in objs)
             {
                 switch (obj.Value<string>("ev"))
@@ -223,7 +240,7 @@ namespace PolygonApiClient.WebSocketsClient
                         quoteMessageHandler(obj.ToObject<Socket_Quote>());
                         break;
                     default:
-                        throw new Exception();
+                        throw new Exception("Unknown Socket event type");
                 }
             }
         }
@@ -256,74 +273,91 @@ namespace PolygonApiClient.WebSocketsClient
             return new ArraySegment<byte>(Encoding.Default.GetBytes(msg));
         }
 
+        #endregion
+
+        #region Socket Handlers
+
+        private Dictionary<string, SocketHandler> socketHandlers = new Dictionary<string, SocketHandler>();
+
+        public SocketHandler GetSocketHandler(string symbol)
+        {
+            if (socketHandlers.TryGetValue(symbol, out var ret))
+                return ret;
+            else
+            {
+                socketHandlers.Add(symbol, new SocketHandler(symbol));
+                return GetSocketHandler(symbol);
+            }
+        }
+
+        #endregion
+
         #region Data Request Methods
 
-        public void AggregateSecondBarsStreaming(string symbol)
+        public SocketHandler Aggregate_Second_Bars_Streaming(string symbol, bool subscribe = true)
         {
-            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""A.O:" + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
-            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""A." + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
+            // A.
+            if (subscribe)
+                return subscribeStreaming(symbol, "A.");
             else
-                throw new ArgumentException($"Invalid symbol submitted for AggregateSecondBarsStreaming[{this.Endpoint.ToString()}]: {symbol}");
+            {
+                unsubscribeStreaming(symbol, "A.");
+                return null;
+            }
         }
 
-        public void AggregateMinuteBarsStreaming(string symbol)
+        public SocketHandler Aggregate_Minute_Bars_Streaming(string symbol, bool subscribe = true)
         {
-            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""AM.O:" + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
-            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""AM." + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
+            // AM.
+            if (subscribe)
+                return subscribeStreaming(symbol, "AM.");
             else
-                throw new ArgumentException($"Invalid symbol submitted for AggregateSecondBarsStreaming[{this.Endpoint.ToString()}]: {symbol}");
+            {
+                unsubscribeStreaming(symbol, "AM.");
+                return null;
+            }
         }
 
-        public void TradesStreaming(string symbol)
+        public SocketHandler Trades_Streaming(string symbol, bool subscribe = true)
         {
-
-
-            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""T.O:" + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
-            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""T.:" + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
+            // T.
+            if (subscribe)
+                return subscribeStreaming(symbol, "T.");
             else
-                throw new ArgumentException($"Invalid symbol submitted for TradeskdStreaming[{this.Endpoint.ToString()}]: {symbol}");
+            {
+                unsubscribeStreaming(symbol, "T.");
+                return null;
+            }
         }
 
-        public void QuotesStreaming(string symbol)
+        public SocketHandler Quotes_Streaming(string symbol, bool subscribe = true)
         {
-
-
-            if (this.Endpoint == PolygonConnectionEndpoint.options && symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""Q.O:" + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
-            else if (this.Endpoint == PolygonConnectionEndpoint.stocks && !symbol.IsOptionSymbol())
-            {
-                string reqStr = @"{""action"":""subscribe"", ""params"":""Q." + symbol.ToUpper() + @"""}";
-                sendAsync(reqStr).Wait();
-            }
+            // Q.
+            if (subscribe)
+                return subscribeStreaming(symbol, "Q.");
             else
-                throw new ArgumentException($"Invalid symbol submitted for QuotesStreaming[{this.Endpoint.ToString()}]: {symbol}");
+            {
+                unsubscribeStreaming(symbol, "Q.");
+                return null;
+            }
+        }
+
+        private SocketHandler subscribeStreaming(string symbol, string prefix)
+        {
+            string reqStr = @"{""action"":""subscribe"", ""params"":""" + prefix + symbol.ToUpper() + @"""}";
+
+            var ret = GetSocketHandler(symbol);
+
+            sendAsync(reqStr).Wait();
+
+            return ret;
+        }
+
+        private void unsubscribeStreaming(string symbol, string prefix)
+        {
+            string reqStr = @"{""action"":""unsubscribe"", ""params"":""" + prefix + symbol.ToUpper() + @"""}";
+
+            sendAsync(reqStr).Wait();
         }
 
         #endregion
@@ -337,26 +371,25 @@ namespace PolygonApiClient.WebSocketsClient
 
         private void tradeMessageHandler(Socket_Trade obj)
         {
-
+            GetSocketHandler(obj.Symbol).T(obj);
         }
 
         private void quoteMessageHandler(Socket_Quote obj)
         {
 
-
+            GetSocketHandler(obj.Symbol).Q(obj);
         }
 
         private void aggregateSecondMessageHandler(Socket_Aggregate obj)
         {
-
+            GetSocketHandler(obj.Symbol).A(obj);
         }
 
         private void aggregateMinuteMessageHandler(Socket_Aggregate obj)
         {
-
+            GetSocketHandler(obj.Symbol).AM(obj);
         }
 
         #endregion  
-
     }
 }

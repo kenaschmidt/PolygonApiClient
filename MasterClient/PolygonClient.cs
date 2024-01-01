@@ -21,11 +21,16 @@ namespace PolygonApiClient
     //
     public class PolygonClient
     {
+        // REST client
         protected PolygonRestClient restClient { get; set; }
-        protected PolygonSocketClient socketClientStocks { get; set; }
-        protected PolygonSocketClient socketClientOptions { get; set; }
+
+        // Socket clients for Stocks, Options, Indices, Forex, and Crypto
+        protected Dictionary<PolygonConnectionEndpoint, PolygonSocketClient> socketClients { get; } = new Dictionary<PolygonConnectionEndpoint, PolygonSocketClient>();
+
+        // Polygin account subscription settings
         public PolygonSubscriptionSettings SubscriptionSettings { get; }
 
+        // API Key (change this to reflect multiple key usage)
         protected readonly string API_Key;
 
         #region Events
@@ -44,38 +49,6 @@ namespace PolygonApiClient
 
         #endregion
 
-        #region Public Properties
-
-        private bool _Connected_StocksSocket { get; set; }
-        public bool Connected_StocksSocket
-        {
-            get => _Connected_StocksSocket;
-            set
-            {
-                if (_Connected_StocksSocket != value)
-                {
-                    _Connected_StocksSocket = value;
-                    OnSocketConnectionChanged();
-                }
-            }
-        }
-
-        private bool _Connected_OptionSocket { get; set; }
-        public bool Connected_OptionSocket
-        {
-            get => _Connected_OptionSocket;
-            set
-            {
-                if (_Connected_OptionSocket != value)
-                {
-                    _Connected_OptionSocket = value;
-                    OnSocketConnectionChanged();
-                }
-            }
-        }
-
-        #endregion
-
         #region Constructor and Initialization
 
         public PolygonClient(string apiKey, PolygonSubscriptionSettings subscriptionSettings)
@@ -89,70 +62,53 @@ namespace PolygonApiClient
 
         private void _initPolygonClients()
         {
-            // Instantiate the clients which will handle different requests
-
+            // Instantiate REST client
             restClient = new PolygonRestClient(API_Key);
 
-            //socketClientStocks = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.stocks);
-
-            //socketClientOptions = new PolygonSocketClient(API_Key, PolygonConnectionEndpoint.options);
+            // Instantiate SOCKET clients for each endpoint
+            foreach (var endpoint in Enum.GetValues(typeof(PolygonConnectionEndpoint)))
+            {
+                socketClients.Add((PolygonConnectionEndpoint)endpoint, new PolygonSocketClient(API_Key, (PolygonConnectionEndpoint)endpoint));
+            }
         }
 
         #endregion
 
-        #region Connection Management
+        #region Socket Management
 
-        public async void ConnectSocketsAsync()
+        public async void ConnectAllSocketsAsync()
         {
             try
             {
-                await socketClientStocks.OpenAsync();
-                Connected_StocksSocket = true;
-                OnSystemMessage("Connected Socket: Stocks");
+                foreach (PolygonSocketClient client in socketClients.Values)
+                {
+                    await client.OpenAsync();
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Connected_StocksSocket = false;
-                OnSystemMessage("Could not connect socket: Stocks");
-            }
-
-            try
-            {
-                await socketClientOptions.OpenAsync();
-                Connected_OptionSocket = true;
-                OnSystemMessage("Connected Socket: Options");
-            }
-            catch (Exception)
-            {
-                Connected_OptionSocket = false;
-                OnSystemMessage("Could not connect socket: Options");
+                OnSystemMessage($"Could not connect socket: {ex.Message}");
             }
         }
-        public async void DisconnectSocketsAsync()
+
+        public async void DisconnectAllSocketsAsync()
         {
             try
             {
-                await socketClientStocks.CloseAsync();
-                Connected_StocksSocket = false;
-                OnSystemMessage("Disconnected Socket: Stocks");
+                foreach (PolygonSocketClient client in socketClients.Values)
+                {
+                    await client.CloseAsync();
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Connected_StocksSocket = false;
-                OnSystemMessage("Could not disconnect socket: Stocks");
+                OnSystemMessage($"Could not disconnect socket: {ex.Message}");
             }
+        }
 
-            try
-            {
-                await socketClientOptions.CloseAsync();
-                Connected_OptionSocket = false;
-                OnSystemMessage("Disconnected Socket: Options");
-            }
-            catch (Exception)
-            {
-                Connected_OptionSocket = false;
-                OnSystemMessage("Could not disconnect socket: Options");
-            }
+        public PolygonSocketClient GetClient(PolygonConnectionEndpoint endpoint)
+        {
+            return socketClients[endpoint];
         }
 
         #endregion
@@ -1140,8 +1096,31 @@ namespace PolygonApiClient
             }
         }
 
-        #endregion   
+        #endregion
 
+        #region -------------------- Polygon Socket API -------------------------------------------
+
+        public SocketHandler Aggregate_Second_Bars_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        {
+            return GetClient(endpoint).Aggregate_Second_Bars_Streaming(symbol, true);
+        }
+
+        public SocketHandler Aggregate_Minute_Bars_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        {
+            return GetClient(endpoint).Aggregate_Minute_Bars_Streaming(symbol, true);
+        }
+
+        public SocketHandler Trades_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        {
+            return GetClient(endpoint).Trades_Streaming(symbol, true);
+        }
+
+        public SocketHandler Quotes_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        {
+            return GetClient(endpoint).Quotes_Streaming(symbol, true);
+        }
+
+        #endregion
     }
 
 }

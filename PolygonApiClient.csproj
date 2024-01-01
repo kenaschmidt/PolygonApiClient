@@ -72,6 +72,7 @@
     </Compile>
     <Compile Include="RESTClient\PolygonRestClient.cs" />
     <Compile Include="WebSocketsClient\PolygonSocketClient.cs" />
+    <Compile Include="WebSocketsClient\SocketHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -17,7 +17,10 @@ namespace PolygonApiClient
     public enum PolygonConnectionEndpoint
     {
         stocks = 0,
-        options = 2
+        options = 1,
+        indices = 2,
+        forex = 3,
+        crypto = 4
     }
     public enum PolygonTimespan
     {
