@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -41,10 +43,10 @@ namespace PolygonApiClient
             SystemMessage?.Invoke(this, msg);
         }
 
-        public event EventHandler SocketConnectionChanged;
-        private void OnSocketConnectionChanged()
+        public event EventHandler<PolygonSocketClient> SocketConnectionChanged;
+        private void OnSocketConnectionChanged(PolygonSocketClient client)
         {
-            SocketConnectionChanged?.Invoke(this, EventArgs.Empty);
+            SocketConnectionChanged?.Invoke(this, client);
         }
 
         #endregion
@@ -66,17 +68,42 @@ namespace PolygonApiClient
             restClient = new PolygonRestClient(API_Key);
 
             // Instantiate SOCKET clients for each endpoint
-            foreach (var endpoint in Enum.GetValues(typeof(PolygonConnectionEndpoint)))
+            foreach (PolygonConnectionEndpoint endpoint in Enum.GetValues(typeof(PolygonConnectionEndpoint)))
             {
-                socketClients.Add((PolygonConnectionEndpoint)endpoint, new PolygonSocketClient(API_Key, (PolygonConnectionEndpoint)endpoint));
+                // Check WebSocket permissions before creating a client
+                if (!SubscriptionSettings.GetSettings(endpoint).HasPermission(PolygonPermissions.WebSockets))
+                    continue;
+
+                var client = socketClients.AddAndReturn(endpoint, new PolygonSocketClient(API_Key, endpoint));
+
+                _initSocketClientHandlers(client);
             }
+        }
+        private void _initSocketClientHandlers(PolygonSocketClient client)
+        {
+            client.Opened += (s, e) =>
+            {
+                Debug.WriteLine($"{((PolygonSocketClient)s).Name} OPENED");
+            };
+            client.Closed += (s, e) =>
+            {
+                Debug.WriteLine($"{((PolygonSocketClient)s).Name} CLOSED");
+            };
+            client.MessageReceived += (s, e) =>
+            {
+                Debug.WriteLine($"{((PolygonSocketClient)s).Name} MESSAGE {e.Message}");
+            };
+            client.ErrorReceived += (s, e) =>
+            {
+                Debug.WriteLine($"{((PolygonSocketClient)s).Name} ERROR {e.ErrorMessage}");
+            };
         }
 
         #endregion
 
         #region Socket Management
 
-        public async void ConnectAllSocketsAsync()
+        public async Task ConnectAllSocketsAsync()
         {
             try
             {
@@ -88,10 +115,11 @@ namespace PolygonApiClient
             catch (Exception ex)
             {
                 OnSystemMessage($"Could not connect socket: {ex.Message}");
+                Debug.WriteLine($"Could not connect socket: {ex.Message}");
             }
         }
 
-        public async void DisconnectAllSocketsAsync()
+        public async Task DisconnectAllSocketsAsync()
         {
             try
             {
@@ -103,6 +131,7 @@ namespace PolygonApiClient
             catch (Exception ex)
             {
                 OnSystemMessage($"Could not disconnect socket: {ex.Message}");
+                Debug.WriteLine($"Could not disconnect socket: {ex.Message}");
             }
         }
 
