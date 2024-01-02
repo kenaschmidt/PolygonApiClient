@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\Enums.cs" />
+    <Compile Include="Helpers\MiscHelpers.cs" />
     <Compile Include="Helpers\PolygonTimestamp.cs" />
     <Compile Include="Helpers\TapeCodes.cs" />
     <Compile Include="Helpers\PolygonEnums.cs" />

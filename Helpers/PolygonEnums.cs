@@ -14,6 +14,15 @@ namespace PolygonApiClient
         developer = 2,
         advanced = 3
     }
+    [Flags]
+    public enum PolygonPermissions
+    {
+        None = 0,
+        Snapshots = 1,
+        WebSockets = 2,
+        Trades = 4,
+        Quotes = 8
+    }
     public enum PolygonConnectionEndpoint
     {
         stocks = 0,
