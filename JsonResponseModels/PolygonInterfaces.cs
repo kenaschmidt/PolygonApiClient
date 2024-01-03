@@ -40,6 +40,24 @@ namespace PolygonApiClient
         string Exercise_Style { get; set; }
         string Expiration_Date { get; set; }
         int Shares_Per_Contract { get; set; }
-        double Strike_Price { get; set; }        
+        double Strike_Price { get; set; }
+    }
+    public interface IPolygonOptionMarketData
+    {
+        double Break_Even_Price { get; set; }
+
+        int Open_Interest { get; set; }
+
+        double Implied_Volatility { get; set; }
+
+        RestOptionContract_Day Day { get; set; }
+
+        RestOptionContract_Details Details { get; set; }
+
+        RestOptionContract_Greeks Greeks { get; set; }
+
+        RestOptionContract_LastQuote Last_Quote { get; set; }
+
+        RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
     }
 }

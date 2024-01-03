@@ -1320,7 +1320,7 @@ namespace PolygonApiClient
     public class RestOptionContract_Response : Rest_Response<RestOptionContract_Result>
     {
     }
-    public class RestOptionContract_Result
+    public class RestOptionContract_Result : IPolygonOptionMarketData
     {
         [JsonProperty("break_even_price")]
         public double Break_Even_Price { get; set; }
@@ -1443,6 +1443,7 @@ namespace PolygonApiClient
 
         [JsonProperty("timeframe")]
         public string Timeframe { get; set; }
+
     }
     public class RestOptionContract_LastTrade
     {
@@ -1547,7 +1548,7 @@ namespace PolygonApiClient
     public class RestOptionsChain_Response : Rest_Response<RestOptionsChain_Result[]>
     {
     }
-    public class RestOptionsChain_Result
+    public class RestOptionsChain_Result : IPolygonOptionMarketData
     {
         [JsonProperty("break_even_price")]
         public double Break_Even_Price { get; set; }
@@ -1568,30 +1569,10 @@ namespace PolygonApiClient
         public RestOptionContract_Greeks Greeks { get; set; }
 
         [JsonProperty("last_quote")]
-        public RestOptionsChain_Quote Last_Quote { get; set; }
+        public RestOptionContract_LastQuote Last_Quote { get; set; }
 
         [JsonProperty("underlying_asset")]
         public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
-    }
-    public class RestOptionsChain_Quote
-    {
-        [JsonProperty("ask")]
-        public double Ask { get; set; }
-
-        [JsonProperty("ask_size")]
-        public int Ask_Size { get; set; }
-
-        [JsonProperty("bid")]
-        public double Bid { get; set; }
-
-        [JsonProperty("bid_size")]
-        public int Bid_Size { get; set; }
-
-        [JsonProperty("last_updated")]
-        public long Last_Updated { get; set; }
-
-        [JsonProperty("midpoint")]
-        public double Midpoint { get; set; }
     }
 
     #endregion
