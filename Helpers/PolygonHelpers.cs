@@ -174,5 +174,25 @@ namespace PolygonApiClient
         }
 
         #endregion
+
+        #region Trade Helpers
+
+        public static bool IsDarkpoolTrade(this Socket_Trade me)
+        {
+            if (me.Exchange == 4 && me.TRF_ID != 0)
+                return true;
+
+            return false;
+        }
+
+        public static bool IsDarkpoolTrade(this RestTrades_Result me)
+        {
+            if (me.Exchange == 4 && me.TRF_ID != 0)
+                return true;
+
+            return false;
+        }
+
+        #endregion
     }
 }

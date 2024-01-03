@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PolygonApiClient
+namespace PolygonApiClient.ExtendedClient
 {
-    public enum OptionType
+    public enum TradeSide
     {
-        put = -1,
-        NotSet = 0,
-        call = 1
+        sell = -1,
+        unknown = 0,
+        buy = 1
     }
 }

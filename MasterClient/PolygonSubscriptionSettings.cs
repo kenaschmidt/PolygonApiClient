@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PolygonApiClient.MasterClient
+namespace PolygonApiClient
 {
     /// <summary>
     /// A class that maintains values for user access based on subscription level. All values will default to Basic (Free) unless set

@@ -230,7 +230,6 @@ namespace PolygonApiClient.RESTClient
             }
         }
 
-
         /// <summary>
         /// Handles several special cases where Results are not returned as an array, but multiple pages may be returned and the results must be combined before being returned as an array
         /// </summary>
@@ -238,7 +237,7 @@ namespace PolygonApiClient.RESTClient
         /// <typeparam name="TResult">The Result object</typeparam>
         /// <param name="reqString">Fully-formed request string</param>
         /// <returns></returns>
-        private async Task<TResult[]> processRestRequest_Special1_ResultAsync<TResponse, TResult>(string reqString) where TResponse : Rest_Response<TResult>, IResult_Special
+        private async Task<TResult[]> processRestRequest_Special1_ResultAsync<TResponse, TResult>(string reqString) where TResponse : Rest_Response<TResult>, IResultSpecial
         {
             try
             {
@@ -600,7 +599,7 @@ namespace PolygonApiClient.RESTClient
             string underlyingAsset,
             double? strike_price,
             PolygonFilterParams? strikePriceFilter,
-            string expirationDate,
+            string expiration_date,
             PolygonFilterParams? expirationDateFilter,
             OptionType? contract_type,
             PolygonOrder? order,
@@ -611,7 +610,7 @@ namespace PolygonApiClient.RESTClient
             string optionalParameters = OptionalParametersStringBuilder(
                 (nameof(strike_price), strike_price),
                 (nameof(strikePriceFilter), strikePriceFilter),
-                (nameof(expirationDate), expirationDate),
+                (nameof(expiration_date), expiration_date),
                 (nameof(expirationDateFilter), expirationDateFilter),
                 (nameof(contract_type), contract_type),
                 (nameof(order), order),
@@ -622,7 +621,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/snapshot/options/{underlyingAsset}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestOptionsChain_Response, RestOptionsChain_Result>(reqStr);

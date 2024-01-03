@@ -10,7 +10,7 @@ namespace PolygonApiClient.Helpers
     // This class provides a simplified/convenient way of handling the various timestamp formats encountered in Polygon, including conversions.
     // All properties are values calculated from the original provided value.
     //
-    public class PolygonTimestamp
+    public class PolygonTimestamp : IComparable<PolygonTimestamp>
     {
         private long? _Milliseconds { get; set; } = null;
         private long? _Nanoseconds { get; set; } = null;
@@ -127,6 +127,11 @@ namespace PolygonApiClient.Helpers
             {
                 _EST = DateTime.Parse(dateString)
             };
+        }
+
+        public int CompareTo(PolygonTimestamp other)
+        {
+            return this.Nanoseconds.CompareTo(other.Nanoseconds);
         }
     }
 }

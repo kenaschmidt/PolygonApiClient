@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PolygonApiClient
+namespace PolygonApiClient.ExtendedClient
 {
-    public enum OptionType
+    public class OptionChainAnalyzer
     {
-        put = -1,
-        NotSet = 0,
-        call = 1
+
     }
 }

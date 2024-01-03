@@ -231,10 +231,10 @@ namespace PolygonApiClient
     public class RestTrades_Response : Rest_Response<RestTrades_Result[]>
     {
     }
-    public class RestTrades_Result
+    public class RestTrades_Result : IPolygonTrade
     {
         [JsonProperty("conditions")]
-        public int[] Conditions { get; set; }
+        public int[] Trade_Conditions { get; set; }
 
         [JsonProperty("correction")]
         public int Correction { get; set; }
@@ -309,7 +309,7 @@ namespace PolygonApiClient
         public long Sequence_Number { get; set; } // Only for Stocks
 
         [JsonProperty("s")]
-        public int Size { get; set; }
+        public Int64 Size { get; set; }
 
         [JsonProperty("z")]
         public int Tape { get; set; } // Only for Stocks
@@ -324,7 +324,7 @@ namespace PolygonApiClient
     public class RestQuotes_Response : Rest_Response<RestQuotes_Result[]>
     {
     }
-    public class RestQuotes_Result
+    public class RestQuotes_Result : IPolygonQuote
     {
         [JsonProperty("ask_exchange")]
         public int Ask_Exchange { get; set; }
@@ -333,7 +333,7 @@ namespace PolygonApiClient
         public double Ask_Price { get; set; }
 
         [JsonProperty("ask_size")]
-        public double Ask_Size_Lots { get; set; }
+        public Int64 Ask_Size { get; set; }
 
         [JsonProperty("bid_exchange")]
         public int Bid_Exchange { get; set; }
@@ -342,7 +342,7 @@ namespace PolygonApiClient
         public double Bid_Price { get; set; }
 
         [JsonProperty("bid_size")]
-        public double Bid_Size_Lots { get; set; }
+        public Int64 Bid_Size { get; set; }
 
         [JsonProperty("conditions")]
         public int[] Conditions { get; set; }
@@ -575,14 +575,14 @@ namespace PolygonApiClient
     }
 
     //
-    // Needed to designate a few 
+    // Needed to designate a few objects for special treatment in processing due to inconsistencies in formatting
     //
-    public interface IResult_Special { }
+    public interface IResultSpecial { }
 
     // 
     // Technical Indicators - SMA and EMA
     //
-    public class RestMovingAverage_Response : Rest_Response<RestMovingAverage_Result>, IResult_Special
+    public class RestMovingAverage_Response : Rest_Response<RestMovingAverage_Result>, IResultSpecial
     {
     }
     public class RestMovingAverage_Result
@@ -605,7 +605,7 @@ namespace PolygonApiClient
     //
     // Technical Indicators - MACD
     //
-    public class RestMACD_Response : Rest_Response<RestMACD_Result>, IResult_Special
+    public class RestMACD_Response : Rest_Response<RestMACD_Result>, IResultSpecial
     {
     }
     public class RestMACD_Result
@@ -634,7 +634,7 @@ namespace PolygonApiClient
     //
     // Technical Indictor - Relative Strength Index
     //
-    public class RestRSI_Response : Rest_Response<RestRSI_Result>, IResult_Special
+    public class RestRSI_Response : Rest_Response<RestRSI_Result>, IResultSpecial
     {
     }
     public class RestRSI_Result
@@ -1323,7 +1323,13 @@ namespace PolygonApiClient
     public class RestOptionContract_Result
     {
         [JsonProperty("break_even_price")]
-        public double BreakEvenPrice { get; set; }
+        public double Break_Even_Price { get; set; }
+
+        [JsonProperty("open_interest")]
+        public int Open_Interest { get; set; }
+
+        [JsonProperty("implied_volatility")]
+        public double Implied_Volatility { get; set; }
 
         [JsonProperty("day")]
         public RestOptionContract_Day Day { get; set; }
@@ -1334,17 +1340,11 @@ namespace PolygonApiClient
         [JsonProperty("greeks")]
         public RestOptionContract_Greeks Greeks { get; set; }
 
-        [JsonProperty("implied_volatility")]
-        public double Implied_Volatility { get; set; }
-
         [JsonProperty("last_quote")]
         public RestOptionContract_LastQuote Last_Quote { get; set; }
 
         [JsonProperty("last_trade")]
         public RestOptionContract_LastTrade Last_Trade { get; set; }
-
-        [JsonProperty("open_interest")]
-        public int Open_Interest { get; set; }
 
         [JsonProperty("underlying_asset")]
         public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
@@ -1381,7 +1381,7 @@ namespace PolygonApiClient
         [JsonProperty("vwap")]
         public double VWAP { get; set; }
     }
-    public class RestOptionContract_Details
+    public class RestOptionContract_Details : IPolygonOptionContract
     {
         [JsonProperty("contract_type")]
         public string Contract_Type { get; set; }
@@ -1492,7 +1492,8 @@ namespace PolygonApiClient
     public class RestOptionsContracts_Response : Rest_Response<RestOptionsContract_Result[]>
     {
     }
-    public class RestOptionsContract_Result
+
+    public class RestOptionsContract_Result : IPolygonOptionContract
     {
         [JsonProperty("additional_underlyings")]
         public RestOptionsContract_AdditionalUnderlyings[] Additional_Underlyings { get; set; }
@@ -1516,7 +1517,7 @@ namespace PolygonApiClient
         public int Shares_Per_Contract { get; set; }
 
         [JsonProperty("strike_price")]
-        public double Strik_Price { get; set; }
+        public double Strike_Price { get; set; }
 
         [JsonProperty("ticker")]
         public string Symbol { get; set; }
@@ -1609,13 +1610,13 @@ namespace PolygonApiClient
         [JsonProperty("message")]
         public string Message { get; set; }
     }
-    public class Socket_Trade : Socket_Base
+    public class Socket_Trade : Socket_Base, IPolygonTrade
     {
         [JsonProperty("sym")]
         public string Symbol { get; set; }
 
         [JsonProperty("x")]
-        public int Exchange_ID { get; set; }
+        public int Exchange { get; set; }
 
         [JsonProperty("i")]
         public string Trade_ID { get; set; }
@@ -1627,7 +1628,7 @@ namespace PolygonApiClient
         public double Price { get; set; }
 
         [JsonProperty("s")]
-        public int Size { get; set; }
+        public Int64 Size { get; set; }
 
         [JsonProperty("c")]
         public int[] Trade_Conditions { get; set; }
@@ -1642,7 +1643,7 @@ namespace PolygonApiClient
         public long TRF_Timestamp_Ms { get; set; }
 
         [JsonProperty("trfi")]
-        public long TRF_Identification { get; set; }
+        public int TRF_ID { get; set; }
     }
     public class Socket_Aggregate : Socket_Base
     {
@@ -1685,7 +1686,7 @@ namespace PolygonApiClient
         [JsonProperty("e")]
         public long Timestamp_End_Ms { get; set; }
     }
-    public class Socket_Quote : Socket_Base
+    public class Socket_Quote : Socket_Base, IPolygonQuote
     {
         [JsonProperty("sym")]
         public string Symbol { get; set; }
@@ -1697,7 +1698,7 @@ namespace PolygonApiClient
         public double Bid_Price { get; set; }
 
         [JsonProperty("bs")]
-        public double Bid_Size_Lots { get; set; }
+        public Int64 Bid_Size { get; set; }
 
         [JsonProperty("ax")]
         public int Ask_Exchange { get; set; }
@@ -1706,7 +1707,7 @@ namespace PolygonApiClient
         public double Ask_Price { get; set; }
 
         [JsonProperty("as")]
-        public double Ask_Size_Lots { get; set; }
+        public Int64 Ask_Size { get; set; }
 
         [JsonProperty("c")]
         public int Quote_Condition_Code { get; set; }

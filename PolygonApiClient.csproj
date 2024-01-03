@@ -49,6 +49,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtendedClient\Helpers\ExtendedEnums.cs" />
+    <Compile Include="ExtendedClient\Helpers\ExtendedHelpers.cs" />
+    <Compile Include="ExtendedClient\Helpers\OptionMath.cs" />
+    <Compile Include="ExtendedClient\Models\OptionChain.cs" />
+    <Compile Include="ExtendedClient\Models\OptionChainAnalyzer.cs" />
+    <Compile Include="ExtendedClient\Models\Security.cs" />
+    <Compile Include="ExtendedClient\Models\TradeStatistics.cs" />
+    <Compile Include="ExtendedClient\PolygonExtendedClient.cs" />
     <Compile Include="Helpers\Enums.cs" />
     <Compile Include="Helpers\MiscHelpers.cs" />
     <Compile Include="Helpers\PolygonTimestamp.cs" />
@@ -62,6 +70,7 @@
     <Compile Include="Helpers\TickerTypes.cs" />
     <Compile Include="Helpers\TimeHelpers.cs" />
     <Compile Include="Helpers\TradeConditionCodes.cs" />
+    <Compile Include="JsonResponseModels\PolygonInterfaces.cs" />
     <Compile Include="JsonResponseModels\PolygonResponseModels.cs" />
     <Compile Include="MasterClient\PolygonClient.cs" />
     <Compile Include="MasterClient\PolygonSubscriptionSettings.cs" />
@@ -83,5 +92,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -27,19 +27,19 @@ namespace PolygonApiClient
             Symbol = symbol;
         }
 
-        public void A(Socket_Aggregate a)
+        public virtual void A(Socket_Aggregate a)
         {
             SecondAggregateReceived?.Invoke(this, a);
         }
-        public void AM(Socket_Aggregate am)
+        public virtual void AM(Socket_Aggregate am)
         {
             MinuteAggregateReceived?.Invoke(this, am);
         }
-        public void Q(Socket_Quote q)
+        public virtual void Q(Socket_Quote q)
         {
             QuoteReceived?.Invoke(this, q);
         }
-        public void T(Socket_Trade t)
+        public virtual void T(Socket_Trade t)
         {
             TradeReceived?.Invoke(this, t);
         }

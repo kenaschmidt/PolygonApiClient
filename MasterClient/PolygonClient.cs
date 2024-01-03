@@ -10,7 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using PolygonApiClient.Helpers;
-using PolygonApiClient.MasterClient;
+using PolygonApiClient;
 using PolygonApiClient.Properties;
 using PolygonApiClient.RESTClient;
 using PolygonApiClient.WebSocketsClient;
@@ -79,24 +79,33 @@ namespace PolygonApiClient
                 _initSocketClientHandlers(client);
             }
         }
+
         private void _initSocketClientHandlers(PolygonSocketClient client)
         {
-            client.Opened += (s, e) =>
-            {
-                Debug.WriteLine($"{((PolygonSocketClient)s).Name} OPENED");
-            };
-            client.Closed += (s, e) =>
-            {
-                Debug.WriteLine($"{((PolygonSocketClient)s).Name} CLOSED");
-            };
-            client.MessageReceived += (s, e) =>
-            {
-                Debug.WriteLine($"{((PolygonSocketClient)s).Name} MESSAGE {e.Message}");
-            };
-            client.ErrorReceived += (s, e) =>
-            {
-                Debug.WriteLine($"{((PolygonSocketClient)s).Name} ERROR {e.ErrorMessage}");
-            };
+            client.Opened += Socket_Client_Opened;
+            client.Closed += Socket_Client_Closed;
+            client.MessageReceived += Socket_Client_MessageReceived;
+            client.ErrorReceived += Socket_Client_ErrorReceived;
+        }
+
+        private void Socket_Client_ErrorReceived(object sender, ErrorReceivedEventArgs e)
+        {
+            Debug.WriteLine($"{((PolygonSocketClient)sender).Name} ERROR {e.ErrorMessage}");
+        }
+
+        private void Socket_Client_MessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            Debug.WriteLine($"{((PolygonSocketClient)sender).Name} MESSAGE {e.Message}");
+        }
+
+        private void Socket_Client_Closed(object sender, EventArgs e)
+        {
+            Debug.WriteLine($"{((PolygonSocketClient)sender).Name} CLOSED");
+        }
+
+        private void Socket_Client_Opened(object sender, EventArgs e)
+        {
+            Debug.WriteLine($"{((PolygonSocketClient)sender).Name} OPENED");
         }
 
         #endregion
@@ -476,7 +485,7 @@ namespace PolygonApiClient
             string underlyingAsset,
             double? strike_price = null,
             PolygonFilterParams? strikePriceFilter = null,
-            DateTime? expirationDate = null,
+            DateTime? expiration_date = null,
             PolygonFilterParams? expirationDateFilter = null,
             OptionType? contract_type = null,
             PolygonOrder? order = null,
@@ -487,7 +496,7 @@ namespace PolygonApiClient
             {
                 // Normalize parameters
                 underlyingAsset = NormalizeSymbol(underlyingAsset);
-                string _expirationDate = expirationDate.HasValue ? expirationDate.Value.ToString("yyyy-MM-dd") : null;
+                string _expirationDate = expiration_date.HasValue ? expiration_date.Value.ToString("yyyy-MM-dd") : null;
 
                 // Call async request method
                 return await restClient.Options_Chain_Async(
@@ -1128,6 +1137,13 @@ namespace PolygonApiClient
         #endregion
 
         #region -------------------- Polygon Socket API -------------------------------------------
+
+        // ---------- NOTES ----------
+        // 1) Each request requires a symbol and correct endpoint. There is no checking for correct symbol/endpoint
+        // 
+        // 2) Each request returns a socket handler which has the appropriate data stream attached. The user needs to subscribe to events to receive.
+        //
+        // ---------------------------
 
         public SocketHandler Aggregate_Second_Bars_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
         {
