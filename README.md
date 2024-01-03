@@ -33,3 +33,10 @@ Top-level client methods normally return a *Result or *Result[].
 ### Socket Calls
 
 Socket calls return a `SocketHandler` object which provides a security-specific link to streaming socket events (Aggregates, Trades, Quotes). 
+
+## Update Notes
+
+### 1/3/24
+
+-`PolygonClient` Base client functionality is mostly complete and tested. Can successfully pull down all REST requests for Stocks and Options (Haven't touched indices or currencies yet).
+-Started working on an `ExtendedClient` that will provide a more intuitive interface with the return data. This introduces some new models (`Security`,`Tick`,`OptionChain` etc) and some data structures to store and manage/analyze. This namespace will be more experimental and obviously the base client will function independently.
