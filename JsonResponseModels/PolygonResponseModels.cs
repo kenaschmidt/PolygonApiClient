@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿//using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +13,7 @@ namespace PolygonApiClient
     //
     // 2) Not a design factor but please pay attention to timestamp suffixes, as some are returned as millisecond and some are returned as nanosecond.
     //
-    // 3) All fields are tagged with JsonProperty attributes with their actual return name values, since many are not intuitive and some returned values differ in naming despite being the
+    // 3) All fields are tagged with JsonPropertyName attributes with their actual return name values, since many are not intuitive and some returned values differ in naming despite being the
     //    same value. Property names for the same values are kept mostly consistent between objects and consistent with JSON naming when no clarification is needed. One exception is 'Ticker'
     //    which has been changed to 'Symbol' [almost] everywhere for consistency.
     //
@@ -29,19 +30,19 @@ namespace PolygonApiClient
     //
     public abstract class Rest_Response<T>
     {
-        [JsonProperty("count")]
+        [JsonPropertyName("count")]
         public int Count { get; set; }
 
-        [JsonProperty("request_id")]
+        [JsonPropertyName("request_id")]
         public string Request_ID { get; set; }
 
-        [JsonProperty("next_url")]
+        [JsonPropertyName("next_url")]
         public string Next_URL { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; set; }
 
-        [JsonProperty("results")]
+        [JsonPropertyName("results")]
         public virtual T Results { get; set; }
     }
 
@@ -52,46 +53,46 @@ namespace PolygonApiClient
     //
     public class RestAggregatesBars_Response : Rest_Response<RestAggregatesBars_Result[]>
     {
-        [JsonProperty("ticker")]
-        public string Ticker { get; set; }
+        [JsonPropertyName("ticker")]
+        public string Symbol { get; set; }
 
-        [JsonProperty("queryCount")]
+        [JsonPropertyName("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("resultsCount")]
+        [JsonPropertyName("resultsCount")]
         public new int Count { get; set; }
 
-        [JsonProperty("adjusted")]
+        [JsonPropertyName("adjusted")]
         public bool Adjusted { get; set; }
 
     }
-    public class RestAggregatesBars_Result
+    public class RestAggregatesBars_Result : IPolygonBar
     {
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
-        public double Volume { get; set; }
+        [JsonPropertyName("v")]
+        public long Volume { get; set; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
 
@@ -100,45 +101,45 @@ namespace PolygonApiClient
     //
     public class RestGroupedDailyBars_Response : Rest_Response<RestGroupedDailyBars_Result[]>
     {
-        [JsonProperty("adjusted")]
+        [JsonPropertyName("adjusted")]
         public bool Adjusted { get; set; }
 
-        [JsonProperty("queryCount")]
+        [JsonPropertyName("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("resultsCount")]
+        [JsonPropertyName("resultsCount")]
         public new int Count { get; set; }
     }
     public class RestGroupedDailyBars_Result
     {
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_End_Ms { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
 
@@ -147,34 +148,34 @@ namespace PolygonApiClient
     //
     public class RestDailyOpenClose_Result
     {
-        [JsonProperty("afterhours")]
+        [JsonPropertyName("afterhours")]
         public double AfterHoursClose { get; set; }
 
-        [JsonProperty("close")]
+        [JsonPropertyName("close")]
         public double Close { get; set; }
 
-        [JsonProperty("from")]
+        [JsonPropertyName("from")]
         public string RequestDate { get; set; }
 
-        [JsonProperty("high")]
+        [JsonPropertyName("high")]
         public double High { get; set; }
 
-        [JsonProperty("low")]
+        [JsonPropertyName("low")]
         public double Low { get; set; }
 
-        [JsonProperty("open")]
+        [JsonPropertyName("open")]
         public double Open { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
 
-        [JsonProperty("preMarket")]
+        [JsonPropertyName("preMarket")]
         public double PremarketOpen { get; set; }
 
-        [JsonProperty("symbol")]
+        [JsonPropertyName("symbol")]
         public string Symbol { get; set; }
 
-        [JsonProperty("volume")]
+        [JsonPropertyName("volume")]
         public long Volume { get; set; }
     }
 
@@ -183,45 +184,45 @@ namespace PolygonApiClient
     //
     public class RestPreviousClose_Response : Rest_Response<RestPreviousClose_Result[]>
     {
-        [JsonProperty("adjusted")]
+        [JsonPropertyName("adjusted")]
         public bool Adjusted { get; set; }
 
-        [JsonProperty("queryCount")]
+        [JsonPropertyName("queryCount")]
         public int QueryCount { get; set; }
 
-        [JsonProperty("resultsCount")]
+        [JsonPropertyName("resultsCount")]
         public new int Count { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
     }
     public class RestPreviousClose_Result
     {
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
     }
 
@@ -233,40 +234,40 @@ namespace PolygonApiClient
     }
     public class RestTrades_Result : IPolygonTrade
     {
-        [JsonProperty("conditions")]
+        [JsonPropertyName("conditions")]
         public int[] Trade_Conditions { get; set; }
 
-        [JsonProperty("correction")]
+        [JsonPropertyName("correction")]
         public int Correction { get; set; }
 
-        [JsonProperty("exchange")]
+        [JsonPropertyName("exchange")]
         public int Exchange { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Trade_ID { get; set; } // Only for Stocks
 
-        [JsonProperty("participant_timestamp")]
+        [JsonPropertyName("participant_timestamp")]
         public long Participant_Timestamp_Ns { get; set; }
 
-        [JsonProperty("price")]
+        [JsonPropertyName("price")]
         public double Price { get; set; }
 
-        [JsonProperty("sequence_number")]
+        [JsonPropertyName("sequence_number")]
         public long Sequence_Number { get; set; } // Only for Stocks
 
-        [JsonProperty("sip_timestamp")]
+        [JsonPropertyName("sip_timestamp")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("trf_timestamp")]
+        [JsonPropertyName("trf_timestamp")]
         public long TRF_Timestamp_Ns { get; set; }
 
-        [JsonProperty("trf_id")]
+        [JsonPropertyName("trf_id")]
         public int TRF_ID { get; set; }
 
-        [JsonProperty("size")]
-        public Int64 Size { get; set; }
+        [JsonPropertyName("size")]
+        public long Size { get; set; }
 
-        [JsonProperty("tape")]
+        [JsonPropertyName("tape")]
         public int Tape { get; set; } // Only for Stocks
     }
 
@@ -278,43 +279,43 @@ namespace PolygonApiClient
     }
     public class RestLastTrade_Result
     {
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int[] Conditions { get; set; }
 
-        [JsonProperty("e")]
+        [JsonPropertyName("e")]
         public int Correction { get; set; }
 
-        [JsonProperty("f")]
+        [JsonPropertyName("f")]
         public long TRF_Timestamp_Ns { get; set; }
 
-        [JsonProperty("y")]
+        [JsonPropertyName("y")]
         public long Participant_Timestamp_Ns { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("x")]
+        [JsonPropertyName("x")]
         public int Exchange { get; set; }
 
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public string Trade_ID { get; set; } // Only for Stocks
 
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public double Price { get; set; }
 
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public long Sequence_Number { get; set; } // Only for Stocks
 
-        [JsonProperty("s")]
-        public Int64 Size { get; set; }
+        [JsonPropertyName("s")]
+        public long Size { get; set; }
 
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public int Tape { get; set; } // Only for Stocks
 
-        [JsonProperty("r")]
+        [JsonPropertyName("r")]
         public int TRF_ID { get; set; }
     }
 
@@ -326,43 +327,43 @@ namespace PolygonApiClient
     }
     public class RestQuotes_Result : IPolygonQuote
     {
-        [JsonProperty("ask_exchange")]
+        [JsonPropertyName("ask_exchange")]
         public int Ask_Exchange { get; set; }
 
-        [JsonProperty("ask_price")]
+        [JsonPropertyName("ask_price")]
         public double Ask_Price { get; set; }
 
-        [JsonProperty("ask_size")]
-        public Int64 Ask_Size { get; set; }
+        [JsonPropertyName("ask_size")]
+        public long Ask_Size { get; set; }
 
-        [JsonProperty("bid_exchange")]
+        [JsonPropertyName("bid_exchange")]
         public int Bid_Exchange { get; set; }
 
-        [JsonProperty("bid_price")]
+        [JsonPropertyName("bid_price")]
         public double Bid_Price { get; set; }
 
-        [JsonProperty("bid_size")]
-        public Int64 Bid_Size { get; set; }
+        [JsonPropertyName("bid_size")]
+        public long Bid_Size { get; set; }
 
-        [JsonProperty("conditions")]
+        [JsonPropertyName("conditions")]
         public int[] Conditions { get; set; }
 
-        [JsonProperty("indicators")]
+        [JsonPropertyName("indicators")]
         public int[] Indicators { get; set; }
 
-        [JsonProperty("participant_timestamp")]
+        [JsonPropertyName("participant_timestamp")]
         public long Participant_Timestamp_Ns { get; set; }
 
-        [JsonProperty("sip_timestamp")]
+        [JsonPropertyName("sip_timestamp")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("sequence_number")]
+        [JsonPropertyName("sequence_number")]
         public long Sequence_Number { get; set; }
 
-        [JsonProperty("tape")]
+        [JsonPropertyName("tape")]
         public int Tape { get; set; }
 
-        [JsonProperty("trf_timestamp")]
+        [JsonPropertyName("trf_timestamp")]
         public long TRF_Timestamp_Ns { get; set; }
     }
 
@@ -374,46 +375,46 @@ namespace PolygonApiClient
     }
     public class RestLastQuote_Result
     {
-        [JsonProperty("P")]
+        [JsonPropertyName("P")]
         public double Ask_Price { get; set; }
 
-        [JsonProperty("S")]
+        [JsonPropertyName("S")]
         public int Ask_Size_Lots { get; set; }
 
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
-        [JsonProperty("X")]
+        [JsonPropertyName("X")]
         public int Ask_Exchange { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int[] Conditions { get; set; }
 
-        [JsonProperty("f")]
+        [JsonPropertyName("f")]
         public long TRF_Timestamp_Ns { get; set; }
 
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public int[] Indicators { get; set; }
 
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public double Bid_Price { get; set; }
 
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public int Bid_Size_Lots { get; set; }
 
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public long Sequence_Number { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("x")]
+        [JsonPropertyName("x")]
         public int Bid_Exchange { get; set; }
 
-        [JsonProperty("y")]
+        [JsonPropertyName("y")]
         public long Participant_Timestamp_Ns { get; set; }
 
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public int Tape { get; set; }
     }
 
@@ -422,155 +423,155 @@ namespace PolygonApiClient
     //
     public class RestTickerSnapshot_Response : Rest_Response<RestTickerSnapshot_Result[]>
     {
-        [JsonProperty("tickers")]
+        [JsonPropertyName("tickers")]
         public override RestTickerSnapshot_Result[] Results { get; set; }
     }
     public class RestTickerSnapshot_Result
     {
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
 
-        [JsonProperty("todaysChange")]
+        [JsonPropertyName("todaysChange")]
         public double Todays_Change { get; set; }
 
-        [JsonProperty("todaysChangePerc")]
+        [JsonPropertyName("todaysChangePerc")]
         public double Todays_Change_Percent { get; set; }
 
-        [JsonProperty("updated")]
+        [JsonPropertyName("updated")]
         public long Last_Update_Timestamp_Ns { get; set; }
 
-        [JsonProperty("fmv")]
+        [JsonPropertyName("fmv")]
         public double FairMarketValue { get; set; } // Only returned on Business plans
 
-        [JsonProperty("day")]
+        [JsonPropertyName("day")]
         public RestTickerSnapshot_Day Last_Daily_Bar { get; set; }
 
-        [JsonProperty("lastQuote")]
+        [JsonPropertyName("lastQuote")]
         public RestTickerSnapshot_LastQuote Last_Quote { get; set; }
 
-        [JsonProperty("lastTrade")]
+        [JsonPropertyName("lastTrade")]
         public RestTickerSnapshot_LastTrade Last_Trade { get; set; }
 
-        [JsonProperty("min")]
+        [JsonPropertyName("min")]
         public RestTickerSnapshot_LastMinuteBar Last_Minute_Bar { get; set; }
 
-        [JsonProperty("prevDay")]
+        [JsonPropertyName("prevDay")]
         public RestTickerSnapshot_PrevDayBar Previous_Day_Bar { get; set; }
     }
     public class RestTickerSnapshot_Day
     {
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
     public class RestTickerSnapshot_LastQuote
     {
-        [JsonProperty("P")]
+        [JsonPropertyName("P")]
         public double Ask_Price { get; set; }
 
-        [JsonProperty("S")]
+        [JsonPropertyName("S")]
         public int Ask_Size_Lots { get; set; }
 
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public double Bid_Price { get; set; }
 
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public int Bid_Size_Lots { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long SIP_Timestamp_Ns { get; set; }
     }
     public class RestTickerSnapshot_LastTrade
     {
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int[] Conditions { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("x")]
+        [JsonPropertyName("x")]
         public int Exchange { get; set; }
 
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public string Trade_ID { get; set; } // Only for Stocks
 
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public double Price { get; set; }
 
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public int Size { get; set; }
 
     }
     public class RestTickerSnapshot_LastMinuteBar
     {
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("av")]
-        public int Accumulated_Volume { get; set; }
+        [JsonPropertyName("av")]
+        public long Accumulated_Volume { get; set; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
     public class RestTickerSnapshot_PrevDayBar
     {
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
 
@@ -587,18 +588,18 @@ namespace PolygonApiClient
     }
     public class RestMovingAverage_Result
     {
-        [JsonProperty("underlying")]
+        [JsonPropertyName("underlying")]
         public RestTechnicalIndicator_Underlying Underlying_Aggregates { get; set; }
 
-        [JsonProperty("values")]
+        [JsonPropertyName("values")]
         public RestMovingAverage_Values[] Indicator_Values { get; set; }
     }
     public class RestMovingAverage_Values
     {
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("value")]
+        [JsonPropertyName("value")]
         public double Indicator_Value { get; set; }
     }
 
@@ -610,24 +611,24 @@ namespace PolygonApiClient
     }
     public class RestMACD_Result
     {
-        [JsonProperty("underlying")]
+        [JsonPropertyName("underlying")]
         public RestTechnicalIndicator_Underlying Underlying_Aggregates { get; set; }
 
-        [JsonProperty("values")]
+        [JsonPropertyName("values")]
         public RestMACD_Values[] Indicator_Values { get; set; }
     }
     public class RestMACD_Values
     {
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("value")]
+        [JsonPropertyName("value")]
         public double MACD_Value { get; set; }
 
-        [JsonProperty("signal")]
+        [JsonPropertyName("signal")]
         public double Signal_Value { get; set; }
 
-        [JsonProperty("histogram")]
+        [JsonPropertyName("histogram")]
         public double Histogram_Value { get; set; }
     }
 
@@ -639,18 +640,18 @@ namespace PolygonApiClient
     }
     public class RestRSI_Result
     {
-        [JsonProperty("underlying")]
+        [JsonPropertyName("underlying")]
         public RestTechnicalIndicator_Underlying Underlying_Aggregates { get; set; }
 
-        [JsonProperty("values")]
+        [JsonPropertyName("values")]
         public RestRSI_Values[] Indicator_Values { get; set; }
     }
     public class RestRSI_Values
     {
-        [JsonProperty("timestamp")]
+        [JsonPropertyName("timestamp")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("value")]
+        [JsonPropertyName("value")]
         public double MACD_Value { get; set; }
     }
 
@@ -659,42 +660,42 @@ namespace PolygonApiClient
     //
     public class RestTechnicalIndicator_Underlying
     {
-        [JsonProperty("aggregates")]
+        [JsonPropertyName("aggregates")]
         public RestTechnicalIndicator_Aggregates[] Aggregates { get; set; }
 
-        [JsonProperty("url")]
+        [JsonPropertyName("url")]
         public string URL_Aggregates_Request { get; set; }
     }
     public class RestTechnicalIndicator_Aggregates
     {
-        [JsonProperty("T")]
+        [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("v")]
+        [JsonPropertyName("v")]
         public double Volume { get; set; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("vw")]
+        [JsonPropertyName("vw")]
         public double VWAP { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public bool IsOTC { get; set; }
     }
     #endregion
@@ -709,43 +710,43 @@ namespace PolygonApiClient
     }
     public class RestTickers_Result
     {
-        [JsonProperty("active")]
+        [JsonPropertyName("active")]
         public bool Active { get; set; }
 
-        [JsonProperty("cik")]
+        [JsonPropertyName("cik")]
         public string CIK { get; set; }
 
-        [JsonProperty("composite_figi")]
+        [JsonPropertyName("composite_figi")]
         public string Composite_FIGI { get; set; }
 
-        [JsonProperty("currency_name")]
+        [JsonPropertyName("currency_name")]
         public string Currency_Name { get; set; }
 
-        [JsonProperty("delisted_utc")]
+        [JsonPropertyName("delisted_utc")]
         public string Delisted_UTC { get; set; }
 
-        [JsonProperty("last_updated_utc")]
+        [JsonPropertyName("last_updated_utc")]
         public string Last_Updated_UTC { get; set; }
 
-        [JsonProperty("locale")]
+        [JsonPropertyName("locale")]
         public string Locale { get; set; }
 
-        [JsonProperty("market")]
+        [JsonPropertyName("market")]
         public string Market { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("primary_exchange")]
+        [JsonPropertyName("primary_exchange")]
         public string Primary_Exchange { get; set; }
 
-        [JsonProperty("share_class_figi")]
+        [JsonPropertyName("share_class_figi")]
         public string Share_Class_FIGI { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
     }
 
@@ -757,107 +758,107 @@ namespace PolygonApiClient
     }
     public class RestTickerDetail_Result
     {
-        [JsonProperty("active")]
+        [JsonPropertyName("active")]
         public bool Active { get; set; }
 
-        [JsonProperty("address")]
+        [JsonPropertyName("address")]
         public RestTickerDetail_Address Address { get; set; }
 
-        [JsonProperty("branding")]
+        [JsonPropertyName("branding")]
         public RestTickerDetails_Branding Branding { get; set; }
 
-        [JsonProperty("cik")]
+        [JsonPropertyName("cik")]
         public string CIK { get; set; }
 
-        [JsonProperty("composite_figi")]
+        [JsonPropertyName("composite_figi")]
         public string Composite_FIGI { get; set; }
 
-        [JsonProperty("currency_name")]
+        [JsonPropertyName("currency_name")]
         public string Currency_Name { get; set; }
 
-        [JsonProperty("delisted_utc")]
+        [JsonPropertyName("delisted_utc")]
         public string Delisted_UTC { get; set; }
 
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonProperty("homepage_url")]
+        [JsonPropertyName("homepage_url")]
         public string Homepage_URL { get; set; }
 
-        [JsonProperty("list_date")]
+        [JsonPropertyName("list_date")]
         public string List_Date { get; set; }
 
-        [JsonProperty("locale")]
+        [JsonPropertyName("locale")]
         public string Locale { get; set; }
 
-        [JsonProperty("market")]
+        [JsonPropertyName("market")]
         public string Market { get; set; }
 
-        [JsonProperty("market_cap")]
+        [JsonPropertyName("market_cap")]
         public long Market_Cap { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("phone_number")]
+        [JsonPropertyName("phone_number")]
         public string Phone_Number { get; set; }
 
-        [JsonProperty("primary_exchange")]
+        [JsonPropertyName("primary_exchange")]
         public string Primary_Exchange { get; set; }
 
-        [JsonProperty("round_lot")]
+        [JsonPropertyName("round_lot")]
         public int Round_Lot_Size { get; set; }
 
-        [JsonProperty("share_class_figi")]
+        [JsonPropertyName("share_class_figi")]
         public string Share_Class_FIGI { get; set; }
 
-        [JsonProperty("share_class_shares_outstanding")]
+        [JsonPropertyName("share_class_shares_outstanding")]
         public int Share_Class_Shares_Outstanding { get; set; }
 
-        [JsonProperty("sic_code")]
+        [JsonPropertyName("sic_code")]
         public string SIC_Code { get; set; }
 
-        [JsonProperty("sic_description")]
+        [JsonPropertyName("sic_description")]
         public string SIC_Description { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
 
-        [JsonProperty("ticker_root")]
+        [JsonPropertyName("ticker_root")]
         public string Symbol_Root { get; set; }
 
-        [JsonProperty("ticker_suffix")]
+        [JsonPropertyName("ticker_suffix")]
         public string Symbol_Suffix { get; set; }
 
-        [JsonProperty("total_employees")]
+        [JsonPropertyName("total_employees")]
         public int Total_Employees { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("weighted_shares_outstanding")]
+        [JsonPropertyName("weighted_shares_outstanding")]
         public int Weighted_Shares_Outstanding { get; set; }
     }
     public class RestTickerDetail_Address
     {
-        [JsonProperty("address1")]
+        [JsonPropertyName("address1")]
         public string StreetAddress { get; set; }
 
-        [JsonProperty("city")]
+        [JsonPropertyName("city")]
         public string City { get; set; }
 
-        [JsonProperty("postal_code")]
+        [JsonPropertyName("postal_code")]
         public string PostalCode { get; set; }
 
-        [JsonProperty("state")]
+        [JsonPropertyName("state")]
         public string State { get; set; }
     }
     public class RestTickerDetails_Branding
     {
-        [JsonProperty("icon_url")]
+        [JsonPropertyName("icon_url")]
         public string Icon_URL { get; set; }
 
-        [JsonProperty("logo_url")]
+        [JsonPropertyName("logo_url")]
         public string Logo_URL { get; set; }
     }
 
@@ -869,10 +870,10 @@ namespace PolygonApiClient
     }
     public class RestTickerEvents_Result
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("events")]
+        [JsonPropertyName("events")]
         public RestTickerEvents_Events[] Events { get; set; }
     }
     public class RestTickerEvents_Events
@@ -888,52 +889,52 @@ namespace PolygonApiClient
     }
     public class RestTickerNews_Result
     {
-        [JsonProperty("amp_url")]
+        [JsonPropertyName("amp_url")]
         public string AcceleratedMobilePage_URL { get; set; }
 
-        [JsonProperty("article_url")]
+        [JsonPropertyName("article_url")]
         public string Article_URL { get; set; }
 
-        [JsonProperty("author")]
+        [JsonPropertyName("author")]
         public string Author { get; set; }
 
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string ID { get; set; }
 
-        [JsonProperty("image_url")]
+        [JsonPropertyName("image_url")]
         public string Image_URL { get; set; }
 
-        [JsonProperty("keywords")]
+        [JsonPropertyName("keywords")]
         public string[] Keywords { get; set; }
 
-        [JsonProperty("published_utc")]
+        [JsonPropertyName("published_utc")]
         public string Published_UTC { get; set; }
 
-        [JsonProperty("publisher")]
+        [JsonPropertyName("publisher")]
         public RestTickerNews_Publisher Publisher { get; set; }
 
-        [JsonProperty("tickers")]
+        [JsonPropertyName("tickers")]
         public string[] Tickers { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
 
     }
     public class RestTickerNews_Publisher
     {
-        [JsonProperty("favicon_url")]
+        [JsonPropertyName("favicon_url")]
         public string Favicon_URL { get; set; }
 
-        [JsonProperty("homepage_url")]
+        [JsonPropertyName("homepage_url")]
         public string Homepage_URL { get; set; }
 
-        [JsonProperty("logo_url")]
+        [JsonPropertyName("logo_url")]
         public string Logo_URL { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
     }
 
@@ -946,16 +947,16 @@ namespace PolygonApiClient
     public class RestTickerTypes_Result
     {
 
-        [JsonProperty("asset_class")]
+        [JsonPropertyName("asset_class")]
         public string Asset_Class { get; set; }
 
-        [JsonProperty("code")]
+        [JsonPropertyName("code")]
         public string Code { get; set; }
 
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonProperty("locale")]
+        [JsonPropertyName("locale")]
         public string Locale { get; set; }
     }
 
@@ -964,22 +965,22 @@ namespace PolygonApiClient
     //
     public class RestMarketHolidays_Result
     {
-        [JsonProperty("close")]
+        [JsonPropertyName("close")]
         public string Closing_Time { get; set; }
 
-        [JsonProperty("date")]
+        [JsonPropertyName("date")]
         public string Date { get; set; }
 
-        [JsonProperty("exchange")]
+        [JsonPropertyName("exchange")]
         public string Exchange { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("open")]
+        [JsonPropertyName("open")]
         public string Opening_Time { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Market_Status { get; set; }
     }
 
@@ -988,77 +989,77 @@ namespace PolygonApiClient
     //
     public class RestMarketStatus_Response
     {
-        [JsonProperty("afterHours")]
+        [JsonPropertyName("afterHours")]
         public bool Is_After_Hours { get; set; }
 
-        [JsonProperty("earlyHours")]
+        [JsonPropertyName("earlyHours")]
         public bool Is_Premarket { get; set; }
 
-        [JsonProperty("currencies")]
+        [JsonPropertyName("currencies")]
         public RestMarketStatus_Currencies Currency_Markets_Status { get; set; }
 
-        [JsonProperty("exchanges")]
+        [JsonPropertyName("exchanges")]
         public RestMarketStatus_Exchanges Exchanges { get; set; }
 
-        [JsonProperty("indicesGroups")]
+        [JsonPropertyName("indicesGroups")]
         public RestMarketStatus_IndicesGroups Indices { get; set; }
 
-        [JsonProperty("market")]
+        [JsonPropertyName("market")]
         public string Market_Status { get; set; }
 
-        [JsonProperty("mserverTime")]
+        [JsonPropertyName("mserverTime")]
         public string Server_Time { get; set; }
 
     }
     public class RestMarketStatus_Currencies
     {
 
-        [JsonProperty("crypto")]
+        [JsonPropertyName("crypto")]
         public string Crypto { get; set; }
 
-        [JsonProperty("fx")]
+        [JsonPropertyName("fx")]
         public string FOREX { get; set; }
     }
     public class RestMarketStatus_Exchanges
     {
 
-        [JsonProperty("nasdaq")]
+        [JsonPropertyName("nasdaq")]
         public string NASDAQ { get; set; }
 
-        [JsonProperty("nyse")]
+        [JsonPropertyName("nyse")]
         public string NYSE { get; set; }
 
-        [JsonProperty("otc")]
+        [JsonPropertyName("otc")]
         public string OTC { get; set; }
     }
     public class RestMarketStatus_IndicesGroups
     {
 
-        [JsonProperty("s_and_p")]
+        [JsonPropertyName("s_and_p")]
         public string S_and_P { get; set; }
 
-        [JsonProperty("societe_generale")]
+        [JsonPropertyName("societe_generale")]
         public string Societe_Generale { get; set; }
 
-        [JsonProperty("msci")]
+        [JsonPropertyName("msci")]
         public string MSCI { get; set; }
 
-        [JsonProperty("ftse_russell")]
+        [JsonPropertyName("ftse_russell")]
         public string FTSE_Russell { get; set; }
 
-        [JsonProperty("mstar")]
+        [JsonPropertyName("mstar")]
         public string Morningstar { get; set; }
 
-        [JsonProperty("mstarc")]
+        [JsonPropertyName("mstarc")]
         public string Morningstar_Customer { get; set; }
 
-        [JsonProperty("cccy")]
+        [JsonPropertyName("cccy")]
         public string CBOE_Crypto { get; set; }
 
-        [JsonProperty("nasdaq")]
+        [JsonPropertyName("nasdaq")]
         public string NASDAQ { get; set; }
 
-        [JsonProperty("dow_jones")]
+        [JsonPropertyName("dow_jones")]
         public string Dow_Jones { get; set; }
     }
 
@@ -1070,16 +1071,16 @@ namespace PolygonApiClient
     }
     public class RestStockSplits_Result
     {
-        [JsonProperty("execution_date")]
+        [JsonPropertyName("execution_date")]
         public string Execution_Date { get; set; }
 
-        [JsonProperty("split_from")]
+        [JsonPropertyName("split_from")]
         public double Split_From { get; set; }
 
-        [JsonProperty("split_to")]
+        [JsonPropertyName("split_to")]
         public double Split_To { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
     }
 
@@ -1091,28 +1092,28 @@ namespace PolygonApiClient
     }
     public class RestDividends_Result
     {
-        [JsonProperty("cash_amount")]
+        [JsonPropertyName("cash_amount")]
         public double Cash_Amount { get; set; }
 
-        [JsonProperty("declaration_date")]
+        [JsonPropertyName("declaration_date")]
         public string Declaration_Date { get; set; }
 
-        [JsonProperty("dividend_type")]
+        [JsonPropertyName("dividend_type")]
         public string Dividend_Type { get; set; }
 
-        [JsonProperty("ex_dividend_date")]
+        [JsonPropertyName("ex_dividend_date")]
         public string Ex_Dividend_Date { get; set; }
 
-        [JsonProperty("frequency")]
+        [JsonPropertyName("frequency")]
         public int Frequency { get; set; }
 
-        [JsonProperty("pay_date")]
+        [JsonPropertyName("pay_date")]
         public string Pay_Date { get; set; }
 
-        [JsonProperty("record_date")]
+        [JsonPropertyName("record_date")]
         public string Record_Date { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
     }
 
@@ -1203,7 +1204,7 @@ namespace PolygonApiClient
         public string label { get; set; }
         public int order { get; set; }
         public string unit { get; set; }
-        public Int64 value { get; set; }
+        public long value { get; set; }
         public string source { get; set; }
         public string[] derived_from { get; set; }
     }
@@ -1216,37 +1217,37 @@ namespace PolygonApiClient
     }
     public class RestConditions_Result
     {
-        [JsonProperty("abbreviation")]
+        [JsonPropertyName("abbreviation")]
         public string Abbreviation { get; set; }
 
-        [JsonProperty("asset_class")]
+        [JsonPropertyName("asset_class")]
         public string Asset_Class { get; set; }
 
-        [JsonProperty("data_types")]
+        [JsonPropertyName("data_types")]
         public string[] Data_Types { get; set; }
 
-        [JsonProperty("description")]
+        [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonProperty("exchange")]
+        [JsonPropertyName("exchange")]
         public int Exchange { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public int ID { get; set; }
 
-        [JsonProperty("legacy")]
+        [JsonPropertyName("legacy")]
         public bool Legacy { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("sip_mapping")]
+        [JsonPropertyName("sip_mapping")]
         public RestConditions_SipMapping SIP_Mapping { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("update_rules")]
+        [JsonPropertyName("update_rules")]
         public RestConditions_UpdateRules Update_Rules { get; set; }
 
     }
@@ -1282,34 +1283,34 @@ namespace PolygonApiClient
     }
     public class RestExchange_Result
     {
-        [JsonProperty("acronym")]
+        [JsonPropertyName("acronym")]
         public string Acronym { get; set; }
 
-        [JsonProperty("asset_class")]
+        [JsonPropertyName("asset_class")]
         public string Asset_Class { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public int ID { get; set; }
 
-        [JsonProperty("locale")]
+        [JsonPropertyName("locale")]
         public string Locale { get; set; }
 
-        [JsonProperty("mic")]
+        [JsonPropertyName("mic")]
         public string Market_Identifier_Code_MIC { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("operating_mic")]
+        [JsonPropertyName("operating_mic")]
         public string Operating_MIC { get; set; }
 
-        [JsonProperty("participant_id")]
+        [JsonPropertyName("participant_id")]
         public string Participant_ID { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("url")]
+        [JsonPropertyName("url")]
         public string Website_URL { get; set; }
 
     }
@@ -1320,166 +1321,166 @@ namespace PolygonApiClient
     public class RestOptionContract_Response : Rest_Response<RestOptionContract_Result>
     {
     }
-    public class RestOptionContract_Result : IPolygonOptionMarketData
+    public class RestOptionContract_Result : IPolygonOptionData
     {
-        [JsonProperty("break_even_price")]
+        [JsonPropertyName("break_even_price")]
         public double Break_Even_Price { get; set; }
 
-        [JsonProperty("open_interest")]
+        [JsonPropertyName("open_interest")]
         public int Open_Interest { get; set; }
 
-        [JsonProperty("implied_volatility")]
+        [JsonPropertyName("implied_volatility")]
         public double Implied_Volatility { get; set; }
 
-        [JsonProperty("day")]
+        [JsonPropertyName("day")]
         public RestOptionContract_Day Day { get; set; }
 
-        [JsonProperty("details")]
+        [JsonPropertyName("details")]
         public RestOptionContract_Details Details { get; set; }
 
-        [JsonProperty("greeks")]
+        [JsonPropertyName("greeks")]
         public RestOptionContract_Greeks Greeks { get; set; }
 
-        [JsonProperty("last_quote")]
+        [JsonPropertyName("last_quote")]
         public RestOptionContract_LastQuote Last_Quote { get; set; }
 
-        [JsonProperty("last_trade")]
+        [JsonPropertyName("last_trade")]
         public RestOptionContract_LastTrade Last_Trade { get; set; }
 
-        [JsonProperty("underlying_asset")]
+        [JsonPropertyName("underlying_asset")]
         public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
     }
     public class RestOptionContract_Day
     {
-        [JsonProperty("change")]
+        [JsonPropertyName("change")]
         public double Change { get; set; }
 
-        [JsonProperty("change_percent")]
+        [JsonPropertyName("change_percent")]
         public double Change_Percent { get; set; }
 
-        [JsonProperty("close")]
+        [JsonPropertyName("close")]
         public double Close { get; set; }
 
-        [JsonProperty("high")]
+        [JsonPropertyName("high")]
         public double High { get; set; }
 
-        [JsonProperty("last_updated")]
+        [JsonPropertyName("last_updated")]
         public long Last_Updated_Ns { get; set; }
 
-        [JsonProperty("low")]
+        [JsonPropertyName("low")]
         public double Low { get; set; }
 
-        [JsonProperty("open")]
+        [JsonPropertyName("open")]
         public double Open { get; set; }
 
-        [JsonProperty("previous_close")]
+        [JsonPropertyName("previous_close")]
         public double Previous_Close { get; set; }
 
-        [JsonProperty("volume")]
+        [JsonPropertyName("volume")]
         public int Volume { get; set; }
 
-        [JsonProperty("vwap")]
+        [JsonPropertyName("vwap")]
         public double VWAP { get; set; }
     }
-    public class RestOptionContract_Details : IPolygonOptionContract
+    public class RestOptionContract_Details
     {
-        [JsonProperty("contract_type")]
+        [JsonPropertyName("contract_type")]
         public string Contract_Type { get; set; }
 
-        [JsonProperty("exercise_style")]
+        [JsonPropertyName("exercise_style")]
         public string Exercise_Style { get; set; }
 
-        [JsonProperty("expiration_date")]
+        [JsonPropertyName("expiration_date")]
         public string Expiration_Date { get; set; }
 
-        [JsonProperty("shares_per_contract")]
+        [JsonPropertyName("shares_per_contract")]
         public int Shares_Per_Contract { get; set; }
 
-        [JsonProperty("strike_price")]
+        [JsonPropertyName("strike_price")]
         public double Strike_Price { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
     }
     public class RestOptionContract_Greeks
     {
-        [JsonProperty("delta")]
+        [JsonPropertyName("delta")]
         public double Delta { get; set; }
 
-        [JsonProperty("gamma")]
+        [JsonPropertyName("gamma")]
         public double Gamma { get; set; }
 
-        [JsonProperty("theta")]
+        [JsonPropertyName("theta")]
         public double Theta { get; set; }
 
-        [JsonProperty("vega")]
+        [JsonPropertyName("vega")]
         public double Vega { get; set; }
     }
     public class RestOptionContract_LastQuote
     {
-        [JsonProperty("ask")]
+        [JsonPropertyName("ask")]
         public double Ask { get; set; }
 
-        [JsonProperty("ask_exchange")]
+        [JsonPropertyName("ask_exchange")]
         public int Ask_Exchange { get; set; }
 
-        [JsonProperty("ask_size")]
+        [JsonPropertyName("ask_size")]
         public int Ask_Size { get; set; }
 
-        [JsonProperty("bid")]
+        [JsonPropertyName("bid")]
         public double Bid { get; set; }
 
-        [JsonProperty("bid_exchange")]
+        [JsonPropertyName("bid_exchange")]
         public int Bid_Exchange { get; set; }
 
-        [JsonProperty("bid_size")]
+        [JsonPropertyName("bid_size")]
         public int Bid_Size { get; set; }
 
-        [JsonProperty("last_updated")]
+        [JsonPropertyName("last_updated")]
         public long Last_Updated_Ns { get; set; }
 
-        [JsonProperty("midpoint")]
+        [JsonPropertyName("midpoint")]
         public double Midpoint { get; set; }
 
-        [JsonProperty("timeframe")]
+        [JsonPropertyName("timeframe")]
         public string Timeframe { get; set; }
 
     }
     public class RestOptionContract_LastTrade
     {
-        [JsonProperty("conditions")]
+        [JsonPropertyName("conditions")]
         public int[] Condition_Codes { get; set; }
 
-        [JsonProperty("exchange")]
+        [JsonPropertyName("exchange")]
         public int Exchange { get; set; }
 
-        [JsonProperty("price")]
+        [JsonPropertyName("price")]
         public double Price { get; set; }
 
-        [JsonProperty("sip_timestamp")]
+        [JsonPropertyName("sip_timestamp")]
         public long SIP_Timestamp_Ns { get; set; }
 
-        [JsonProperty("size")]
+        [JsonPropertyName("size")]
         public int Size { get; set; }
 
-        [JsonProperty("timeframe")]
+        [JsonPropertyName("timeframe")]
         public string Timeframe { get; set; }
     }
     public class RestOptionContract_UnderlyingAsset
     {
-        [JsonProperty("change_to_break_even")]
+        [JsonPropertyName("change_to_break_even")]
         public double Change_To_BreakEven { get; set; }
 
-        [JsonProperty("last_updated")]
+        [JsonPropertyName("last_updated")]
         public long Last_Updated_Ns { get; set; }
 
-        [JsonProperty("price")]
+        [JsonPropertyName("price")]
         public double Price { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
 
-        [JsonProperty("timeframe")]
+        [JsonPropertyName("timeframe")]
         public string Timeframe { get; set; }
     }
 
@@ -1494,50 +1495,50 @@ namespace PolygonApiClient
     {
     }
 
-    public class RestOptionsContract_Result : IPolygonOptionContract
+    public class RestOptionsContract_Result
     {
-        [JsonProperty("additional_underlyings")]
+        [JsonPropertyName("additional_underlyings")]
         public RestOptionsContract_AdditionalUnderlyings[] Additional_Underlyings { get; set; }
 
-        [JsonProperty("cfi")]
+        [JsonPropertyName("cfi")]
         public string CFI { get; set; }
 
-        [JsonProperty("contract_type")]
+        [JsonPropertyName("contract_type")]
         public string Contract_Type { get; set; }
 
-        [JsonProperty("exercise_style")]
+        [JsonPropertyName("exercise_style")]
         public string Exercise_Style { get; set; }
 
-        [JsonProperty("expiration_date")]
+        [JsonPropertyName("expiration_date")]
         public string Expiration_Date { get; set; }
 
-        [JsonProperty("primary_exchange")]
+        [JsonPropertyName("primary_exchange")]
         public string Primary_Exchange { get; set; }
 
-        [JsonProperty("shares_per_contract")]
+        [JsonPropertyName("shares_per_contract")]
         public int Shares_Per_Contract { get; set; }
 
-        [JsonProperty("strike_price")]
+        [JsonPropertyName("strike_price")]
         public double Strike_Price { get; set; }
 
-        [JsonProperty("ticker")]
+        [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
 
-        [JsonProperty("underlying_ticker")]
+        [JsonPropertyName("underlying_ticker")]
         public string Underlying_Ticker { get; set; }
 
-        [JsonProperty("correction")]
+        [JsonPropertyName("correction")]
         public int Correction { get; set; }
     }
     public class RestOptionsContract_AdditionalUnderlyings
     {
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public int Amount { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("underlying")]
+        [JsonPropertyName("underlying")]
         public string Underlying { get; set; }
     }
 
@@ -1548,30 +1549,30 @@ namespace PolygonApiClient
     public class RestOptionsChain_Response : Rest_Response<RestOptionsChain_Result[]>
     {
     }
-    public class RestOptionsChain_Result : IPolygonOptionMarketData
+    public class RestOptionsChain_Result : IPolygonOptionData
     {
-        [JsonProperty("break_even_price")]
+        [JsonPropertyName("break_even_price")]
         public double Break_Even_Price { get; set; }
 
-        [JsonProperty("open_interest")]
+        [JsonPropertyName("open_interest")]
         public int Open_Interest { get; set; }
 
-        [JsonProperty("implied_volatility")]
+        [JsonPropertyName("implied_volatility")]
         public double Implied_Volatility { get; set; }
 
-        [JsonProperty("day")]
+        [JsonPropertyName("day")]
         public RestOptionContract_Day Day { get; set; }
 
-        [JsonProperty("details")]
+        [JsonPropertyName("details")]
         public RestOptionContract_Details Details { get; set; }
 
-        [JsonProperty("greeks")]
+        [JsonPropertyName("greeks")]
         public RestOptionContract_Greeks Greeks { get; set; }
 
-        [JsonProperty("last_quote")]
+        [JsonPropertyName("last_quote")]
         public RestOptionContract_LastQuote Last_Quote { get; set; }
 
-        [JsonProperty("underlying_asset")]
+        [JsonPropertyName("underlying_asset")]
         public RestOptionContract_UnderlyingAsset Underlying_Asset { get; set; }
     }
 
@@ -1581,128 +1582,128 @@ namespace PolygonApiClient
 
     public class Socket_Base
     {
-        [JsonProperty("ev")]
+        [JsonPropertyName("ev")]
         public string Event { get; set; }
     }
     public class Socket_Message : Socket_Base
     {
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; set; }
-        [JsonProperty("message")]
+        [JsonPropertyName("message")]
         public string Message { get; set; }
     }
     public class Socket_Trade : Socket_Base, IPolygonTrade
     {
-        [JsonProperty("sym")]
+        [JsonPropertyName("sym")]
         public string Symbol { get; set; }
 
-        [JsonProperty("x")]
+        [JsonPropertyName("x")]
         public int Exchange { get; set; }
 
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public string Trade_ID { get; set; }
 
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public int Tape { get; set; }
 
-        [JsonProperty("p")]
+        [JsonPropertyName("p")]
         public double Price { get; set; }
 
-        [JsonProperty("s")]
-        public Int64 Size { get; set; }
+        [JsonPropertyName("s")]
+        public long Size { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int[] Trade_Conditions { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Ms { get; set; }
 
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public long Sequence_Number { get; set; }
 
-        [JsonProperty("trft")]
+        [JsonPropertyName("trft")]
         public long TRF_Timestamp_Ms { get; set; }
 
-        [JsonProperty("trfi")]
+        [JsonPropertyName("trfi")]
         public int TRF_ID { get; set; }
     }
-    public class Socket_Aggregate : Socket_Base
+    public class Socket_Aggregate : Socket_Base, IPolygonBar
     {
-        [JsonProperty("sym")]
+        [JsonPropertyName("sym")]
         public string Symbol { get; set; }
 
-        [JsonProperty("v")]
-        public int Volume { get; set; }
+        [JsonPropertyName("v")]
+        public long Volume { get; set; }
 
-        [JsonProperty("av")]
+        [JsonPropertyName("av")]
         public int Accumulated_Volume { get; set; }
 
-        [JsonProperty("op")]
+        [JsonPropertyName("op")]
         public double Day_Open { get; set; }
 
-        [JsonProperty("vw")]
-        public double Tick_VWAP { get; set; }
+        [JsonPropertyName("vw")]
+        public double VWAP { get; set; }
 
-        [JsonProperty("o")]
+        [JsonPropertyName("o")]
         public double Open { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public double Close { get; set; }
 
-        [JsonProperty("h")]
+        [JsonPropertyName("h")]
         public double High { get; set; }
 
-        [JsonProperty("l")]
+        [JsonPropertyName("l")]
         public double Low { get; set; }
 
-        [JsonProperty("a")]
+        [JsonPropertyName("a")]
         public double Day_VWAP { get; set; }
 
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public double Average_Trade_Size { get; set; }
 
-        [JsonProperty("s")]
+        [JsonPropertyName("s")]
         public long Timestamp_Start_Ms { get; set; }
 
-        [JsonProperty("e")]
+        [JsonPropertyName("e")]
         public long Timestamp_End_Ms { get; set; }
     }
     public class Socket_Quote : Socket_Base, IPolygonQuote
     {
-        [JsonProperty("sym")]
+        [JsonPropertyName("sym")]
         public string Symbol { get; set; }
 
-        [JsonProperty("bx")]
+        [JsonPropertyName("bx")]
         public int Bid_Exchange { get; set; }
 
-        [JsonProperty("bp")]
+        [JsonPropertyName("bp")]
         public double Bid_Price { get; set; }
 
-        [JsonProperty("bs")]
-        public Int64 Bid_Size { get; set; }
+        [JsonPropertyName("bs")]
+        public long Bid_Size { get; set; }
 
-        [JsonProperty("ax")]
+        [JsonPropertyName("ax")]
         public int Ask_Exchange { get; set; }
 
-        [JsonProperty("ap")]
+        [JsonPropertyName("ap")]
         public double Ask_Price { get; set; }
 
-        [JsonProperty("as")]
-        public Int64 Ask_Size { get; set; }
+        [JsonPropertyName("as")]
+        public long Ask_Size { get; set; }
 
-        [JsonProperty("c")]
+        [JsonPropertyName("c")]
         public int Quote_Condition_Code { get; set; }
 
-        [JsonProperty("i")]
+        [JsonPropertyName("i")]
         public int[] Quote_Indicator_Codes { get; set; }
 
-        [JsonProperty("t")]
+        [JsonPropertyName("t")]
         public long Timestamp_Ms { get; set; }
 
-        [JsonProperty("q")]
+        [JsonPropertyName("q")]
         public long Sequence_Number { get; set; }
 
-        [JsonProperty("z")]
+        [JsonPropertyName("z")]
         public int Tape { get; set; }
     }
 

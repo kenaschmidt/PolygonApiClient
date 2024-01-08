@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
-using Newtonsoft.Json;
+using System.Text.Json;
+//using Newtonsoft.Json;
 using System.Threading;
 using System.Collections.Concurrent;
 using PolygonApiClient.WebSocketsClient;
@@ -15,6 +16,7 @@ using System.Diagnostics;
 using PolygonApiClient.Helpers;
 using System.Timers;
 using System.CodeDom;
+using System.Text.RegularExpressions;
 
 namespace PolygonApiClient.RESTClient
 {
@@ -116,7 +118,7 @@ namespace PolygonApiClient.RESTClient
                     string replyString = await response.Content.ReadAsStringAsync();
 
                     // Convert the string response to appropriate JSON model (TResponse)
-                    TResponse responseObject = JsonConvert.DeserializeObject<TResponse>(replyString);
+                    TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
 
                     // If there is a follow-on request, throw an error
                     if (responseObject.Next_URL != null)
@@ -136,6 +138,8 @@ namespace PolygonApiClient.RESTClient
             }
         }
 
+        private Stopwatch[] sw = new Stopwatch[4] { new Stopwatch(), new Stopwatch(), new Stopwatch(), new Stopwatch() };
+
         /// <summary>
         /// Sends a request string and processes the return data into object[s] of the type TResult. Processes all subsequent (paginated) data before returning.
         /// </summary>
@@ -147,6 +151,8 @@ namespace PolygonApiClient.RESTClient
         {
             try
             {
+                List<Task> tasks = new List<Task>();
+
                 List<TResult> ret = new List<TResult>();
 
                 while (reqString != "done")
@@ -160,27 +166,25 @@ namespace PolygonApiClient.RESTClient
                     // Check success
                     if (response.IsSuccessStatusCode)
                     {
-                        // Read response from the server
+                        // Read response from the server                        
                         string replyString = await response.Content.ReadAsStringAsync();
 
-                        // Convert the string response to appropriate JSON model (TResponse)
-                        TResponse responseObject = JsonConvert.DeserializeObject<TResponse>(replyString);
+                        tasks.Add(Task.Run(() =>
+                        {
+                            TResponse r = JsonSerializer.Deserialize<TResponse>(replyString);
+                            if (r.Results.Length > 0)
+                                ret.AddRange(r.Results);
+                        }));
 
-                        // Add 'Results' to a return list
-                        if (responseObject.Results.Length > 0)
-                            ret.AddRange(responseObject.Results);
-
-                        // If there is a follow-on request, get the URL
-                        if (responseObject.Next_URL != null)
-                            reqString = responseObject.Next_URL;
-                        else
-                            reqString = "done";
+                        reqString = parseNextURL(replyString);
                     }
                     else
                     {
                         throw new ArgumentException($"Error in request: {reqString}");
                     }
                 }
+
+                Task.WaitAll(tasks.ToArray());
 
                 return ret.ToArray();
             }
@@ -214,7 +218,7 @@ namespace PolygonApiClient.RESTClient
                     string replyString = await response.Content.ReadAsStringAsync();
 
                     // Convert the string response to appropriate JSON model (TResponse)
-                    TResult[] resultObject = JsonConvert.DeserializeObject<TResult[]>(replyString);
+                    TResult[] resultObject = JsonSerializer.Deserialize<TResult[]>(replyString);
 
                     return resultObject;
                 }
@@ -258,7 +262,7 @@ namespace PolygonApiClient.RESTClient
                         string replyString = await response.Content.ReadAsStringAsync();
 
                         // Convert the string response to appropriate JSON model (TResponse)
-                        TResponse responseObject = JsonConvert.DeserializeObject<TResponse>(replyString);
+                        TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
 
                         // Add 'Results' to a return list
                         ret.Add(responseObject.Results);
@@ -305,7 +309,7 @@ namespace PolygonApiClient.RESTClient
                 string replyString = await response.Content.ReadAsStringAsync();
 
                 // Convert the string response to appropriate JSON model (TResponse)
-                TResponse responseObject = JsonConvert.DeserializeObject<TResponse>(replyString);
+                TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
 
                 return responseObject;
             }
@@ -313,6 +317,19 @@ namespace PolygonApiClient.RESTClient
             {
                 throw new ArgumentException($"Error in request: {reqString}");
             }
+        }
+
+        //
+        // Experimental
+        //
+
+        private string parseNextURL(string responseString)
+        {
+            Regex rx = new Regex("https://([\\w-]+\\.)+[\\w-]+(/[\\w- ./?%&=]*)?");
+            var match = rx.Match(responseString);
+            if (match.Success == true)
+                return match.Value;
+            else return "done";
         }
 
         #endregion
@@ -340,7 +357,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/aggs/ticker/{symbol}/range/{multiplier}/{timespan}/{fromMs}/{toMs}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestAggregatesBars_Response, RestAggregatesBars_Result>(reqStr);
@@ -361,7 +378,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/aggs/grouped/locale/us/market/stocks/{date}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestGroupedDailyBars_Response, RestGroupedDailyBars_Result>(reqStr);
@@ -380,7 +397,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/open-close/{symbol}/{date}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestAsync<RestDailyOpenClose_Result>(reqStr);
@@ -398,7 +415,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/aggs/ticker/{symbol}/prev{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestPreviousClose_Response, RestPreviousClose_Result>(reqStr);
@@ -424,7 +441,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/trades/{symbol}{optionalParameters}";
 
             // DEBUG
-            Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr);
@@ -450,7 +467,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/trades/{symbol}{optionalParameters}";
 
             // DEBUG
-            Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr);
@@ -463,7 +480,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/last/trade/{symbol}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestLastTrade_Response, RestLastTrade_Result>(reqStr);
@@ -489,10 +506,17 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/quotes/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
-            return await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
+            var result = await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
+
+            foreach (var s in sw)
+            {
+                Debug.WriteLine($"{s.Elapsed.TotalMilliseconds} ms");
+            }
+
+            return result;
         }
 
         public async Task<RestQuotes_Result[]> Quotes_Async(
@@ -515,7 +539,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/quotes/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
@@ -528,7 +552,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/last/nbbo/{symbol}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestLastQuote_Response, RestLastQuote_Result>(reqStr);
@@ -549,7 +573,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/snapshot/locale/us/markets/stocks/tickers{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTickerSnapshot_Response, RestTickerSnapshot_Result>(reqStr);
@@ -567,7 +591,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/snapshot/locale/us/markets/stocks/{direction}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTickerSnapshot_Response, RestTickerSnapshot_Result>(reqStr);
@@ -590,7 +614,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/snapshot/options/{underlyingAsset}/{optionContract}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestOptionContract_Response, RestOptionContract_Result>(reqStr);
@@ -621,7 +645,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/snapshot/options/{underlyingAsset}{optionalParameters}";
 
             // DEBUG
-            Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestOptionsChain_Response, RestOptionsChain_Result>(reqStr);
@@ -663,7 +687,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/indicators/sma/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequest_Special1_ResultAsync<RestMovingAverage_Response, RestMovingAverage_Result>(reqStr);
@@ -697,7 +721,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/indicators/ema/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequest_Special1_ResultAsync<RestMovingAverage_Response, RestMovingAverage_Result>(reqStr);
@@ -735,7 +759,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/indicators/macd/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequest_Special1_ResultAsync<RestMACD_Response, RestMACD_Result>(reqStr);
@@ -767,7 +791,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/indicators/rsi/{symbol}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequest_Special1_ResultAsync<RestRSI_Response, RestRSI_Result>(reqStr);
@@ -789,7 +813,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/options/contracts/{options_ticker}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestOptionsContract_Response, RestOptionsContract_Result>(reqStr);
@@ -829,7 +853,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/options/contracts{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestOptionsContracts_Response, RestOptionsContract_Result>(reqStr);
@@ -871,7 +895,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/tickers{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTickers_Response, RestTickers_Result>(reqStr);
@@ -890,7 +914,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/tickers/{ticker}{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestTickerDetail_Response, RestTickerDetail_Result>(reqStr);
@@ -915,7 +939,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/vX/reference/tickers/{id}/events{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestTickerEvents_Response, RestTickerEvents_Result>(reqStr);
@@ -944,7 +968,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v2/reference/news{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTickerNews_Response, RestTickerNews_Result>(reqStr);
@@ -963,7 +987,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/tickers/types{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTickerTypes_Response, RestTickerTypes_Result>(reqStr);
@@ -975,7 +999,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/marketstatus/upcoming";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequest_Special2_ResultAsync<RestMarketHolidays_Result>(reqStr);
@@ -987,7 +1011,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v1/marketstatus/now";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestAsync<RestMarketStatus_Response>(reqStr);
@@ -1019,7 +1043,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/splits{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestStockSplits_Response, RestStockSplits_Result>(reqStr);
@@ -1069,7 +1093,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/dividends{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestDividends_Response, RestDividends_Result>(reqStr);
@@ -1109,7 +1133,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/vX/reference/financials{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestStockFinancials_Response, RestStockFinancials_Result>(reqStr);
@@ -1139,7 +1163,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/conditions{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestConditions_Response, RestConditions_Result>(reqStr);
@@ -1158,7 +1182,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/reference/exchanges{optionalParameters}";
 
             // DEBUG
-            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestExchange_Response, RestExchange_Result>(reqStr);
