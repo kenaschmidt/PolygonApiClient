@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text.Json;
-//using Newtonsoft.Json;
 using System.Threading;
 using System.Collections.Concurrent;
 using PolygonApiClient.WebSocketsClient;
@@ -17,6 +15,7 @@ using PolygonApiClient.Helpers;
 using System.Timers;
 using System.CodeDom;
 using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
 
 namespace PolygonApiClient.RESTClient
 {
@@ -93,6 +92,23 @@ namespace PolygonApiClient.RESTClient
 
         #region Request Processing
 
+        public class CustomInt64Converter : JsonConverter<long>
+        {
+            public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                return reader.TryGetInt64(out var result) ? result : Convert.ToInt64(reader.GetDecimal());
+            }
+
+            public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)
+            {
+                writer.WriteNumberValue(value);
+            }
+        }
+        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        {
+            Converters = { new CustomInt64Converter() }
+        };
+
         /// <summary>
         /// Sends a request string and processes the return data into object[s] of the type TResult. Processes all subsequent (paginated) data before returning.
         /// </summary>
@@ -117,8 +133,9 @@ namespace PolygonApiClient.RESTClient
                     // Read response from the server
                     string replyString = await response.Content.ReadAsStringAsync();
 
+
                     // Convert the string response to appropriate JSON model (TResponse)
-                    TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
+                    TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString, jsonOptions);
 
                     // If there is a follow-on request, throw an error
                     if (responseObject.Next_URL != null)
@@ -132,13 +149,11 @@ namespace PolygonApiClient.RESTClient
                     throw new ArgumentException($"Error in request: {reqString}");
                 }
             }
-            catch (Newtonsoft.Json.JsonReaderException ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
         }
-
-        private Stopwatch[] sw = new Stopwatch[4] { new Stopwatch(), new Stopwatch(), new Stopwatch(), new Stopwatch() };
 
         /// <summary>
         /// Sends a request string and processes the return data into object[s] of the type TResult. Processes all subsequent (paginated) data before returning.
@@ -147,16 +162,20 @@ namespace PolygonApiClient.RESTClient
         /// <typeparam name="TResult">The Result object</typeparam>
         /// <param name="reqString">Fully-formed request string</param>
         /// <returns></returns>
-        private async Task<TResult[]> processRestRequestArrayResultAsync<TResponse, TResult>(string reqString) where TResponse : Rest_Response<TResult[]>
+        private async Task<TResult[]> processRestRequestArrayResultAsync<TResponse, TResult>(string reqString, bool singlePageOnly = false) where TResponse : Rest_Response<TResult[]>
         {
             try
             {
-                List<Task> tasks = new List<Task>();
+                // List of tasks to be executed for each returned result (so we can keep processing incoming replies)
+                List<Task<TResponse>> tasks = new List<Task<TResponse>>();
 
+                // Return data
                 List<TResult> ret = new List<TResult>();
 
+                // While the response contains follow-on replies
                 while (reqString != "done")
                 {
+                    // Wait for our turn to transmit
                     if (requestToken(out Task token))
                         await token;
 
@@ -169,14 +188,15 @@ namespace PolygonApiClient.RESTClient
                         // Read response from the server                        
                         string replyString = await response.Content.ReadAsStringAsync();
 
-                        tasks.Add(Task.Run(() =>
+                        // Create a task to perform the deserialization in the background
+                        tasks.Add(Task<TResponse>.Run(() =>
                         {
-                            TResponse r = JsonSerializer.Deserialize<TResponse>(replyString);
-                            if (r.Results.Length > 0)
-                                ret.AddRange(r.Results);
+                            TResponse r = JsonSerializer.Deserialize<TResponse>(replyString, jsonOptions);
+                            return r;
                         }));
 
-                        reqString = parseNextURL(replyString);
+                        // Parse the next URL manually so we can continue without waiting for deserialization
+                        reqString = singlePageOnly ? "done" : parseNextURL(replyString);
                     }
                     else
                     {
@@ -184,11 +204,20 @@ namespace PolygonApiClient.RESTClient
                     }
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                // Wait for all the deserialization tasks to complete
+                await Task.WhenAll(tasks.ToArray());
 
+                // Add all the deserialized results (that contained values) to the return list
+                foreach (var task in tasks)
+                {
+                    if (task.Result.Results != null)
+                        ret.AddRange(task.Result.Results);
+                }
+
+                // Return
                 return ret.ToArray();
             }
-            catch (Newtonsoft.Json.JsonReaderException ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -218,7 +247,7 @@ namespace PolygonApiClient.RESTClient
                     string replyString = await response.Content.ReadAsStringAsync();
 
                     // Convert the string response to appropriate JSON model (TResponse)
-                    TResult[] resultObject = JsonSerializer.Deserialize<TResult[]>(replyString);
+                    TResult[] resultObject = JsonSerializer.Deserialize<TResult[]>(replyString, jsonOptions);
 
                     return resultObject;
                 }
@@ -228,7 +257,7 @@ namespace PolygonApiClient.RESTClient
                 }
 
             }
-            catch (Newtonsoft.Json.JsonReaderException ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -262,7 +291,7 @@ namespace PolygonApiClient.RESTClient
                         string replyString = await response.Content.ReadAsStringAsync();
 
                         // Convert the string response to appropriate JSON model (TResponse)
-                        TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
+                        TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString, jsonOptions);
 
                         // Add 'Results' to a return list
                         ret.Add(responseObject.Results);
@@ -281,7 +310,7 @@ namespace PolygonApiClient.RESTClient
 
                 return ret.ToArray();
             }
-            catch (Newtonsoft.Json.JsonReaderException ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -309,7 +338,7 @@ namespace PolygonApiClient.RESTClient
                 string replyString = await response.Content.ReadAsStringAsync();
 
                 // Convert the string response to appropriate JSON model (TResponse)
-                TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString);
+                TResponse responseObject = JsonSerializer.Deserialize<TResponse>(replyString, jsonOptions);
 
                 return responseObject;
             }
@@ -319,16 +348,23 @@ namespace PolygonApiClient.RESTClient
             }
         }
 
-        //
-        // Experimental
-        //
-
+        /// <summary>
+        /// This method regex-parses the raw response string to pull out the Next_URL value for paginated responses. 
+        /// This speeds up processing time since we don't have to wait for the entire value to be deserialied before sending the next request.
+        /// </summary>
+        /// <param name="responseString"></param>
+        /// <returns></returns>
         private string parseNextURL(string responseString)
         {
-            Regex rx = new Regex("https://([\\w-]+\\.)+[\\w-]+(/[\\w- ./?%&=]*)?");
+            Regex rx = new Regex("next_url(.*)https://api.polygon.io+(/[\\w- :./?%&=]*)?");
+
             var match = rx.Match(responseString);
+
             if (match.Success == true)
-                return match.Value;
+            {
+                rx = new Regex("https://api.polygon.io+(/[\\w- :./?%&=]*)?");
+                return rx.Match(match.Value).Value;
+            }
             else return "done";
         }
 
@@ -441,7 +477,7 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/trades/{symbol}{optionalParameters}";
 
             // DEBUG
-            // Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            //Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr);
@@ -467,11 +503,48 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/trades/{symbol}{optionalParameters}";
 
             // DEBUG
-            // Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            //Debug.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr);
         }
+
+        /// <summary>
+        /// TEST: Special method to only retrieve a window of quotes
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="order"></param>
+        /// <param name="limit"></param>
+        /// <param name="sort"></param>
+        /// <returns></returns>
+        public async Task<RestTrades_Result[]> Trades_Async(
+            string symbol,
+            long from,
+            long to,
+            PolygonOrder? order,
+            int? limit,
+            PolygonTradeQuoteSort? sort)
+        {
+            // Build optional parameters string                
+            string optionalParameters = OptionalParametersStringBuilder(
+                (nameof(order), order),
+                (nameof(limit), limit),
+                (nameof(sort), sort));
+
+            string timestampFilter = $"timestamp.gte={from}&timestamp.lt={to}";
+
+            // Base request string with optional parameters appended
+            string reqStr = $@"/v3/trades/{symbol}{optionalParameters}{timestampFilter}";
+
+            // DEBUG
+            //Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+
+            // Submit request and return processed results
+            return await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr);
+        }
+
 
         public async Task<RestLastTrade_Result> Last_Trade_Async(
             string symbol)
@@ -484,6 +557,28 @@ namespace PolygonApiClient.RESTClient
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestLastTrade_Response, RestLastTrade_Result>(reqStr);
+        }
+
+        public async Task<RestTrades_Result> Last_Trade_Async(
+            string symbol,
+            long timestamp)
+        {
+            // Build optional parameters string                
+            string optionalParameters = OptionalParametersStringBuilder(
+                (nameof(timestamp), timestamp),
+                ("timestampFilter", PolygonFilterParams.lte),
+                ("limit", 1));
+
+            // Base request string with optional parameters appended
+            string reqStr = $@"/v3/trades/{symbol}{optionalParameters}";
+
+            // DEBUG
+            //Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+
+            // Submit request and return processed results
+            var ret = await processRestRequestArrayResultAsync<RestTrades_Response, RestTrades_Result>(reqStr, true);
+
+            return ret.SingleOrDefault();
         }
 
         public async Task<RestQuotes_Result[]> Quotes_Async(
@@ -506,19 +601,13 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/quotes/{symbol}{optionalParameters}";
 
             // DEBUG
-            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             var result = await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
 
-            foreach (var s in sw)
-            {
-                Debug.WriteLine($"{s.Elapsed.TotalMilliseconds} ms");
-            }
-
             return result;
         }
-
         public async Task<RestQuotes_Result[]> Quotes_Async(
             string symbol,
             long? timestamp,
@@ -539,7 +628,45 @@ namespace PolygonApiClient.RESTClient
             string reqStr = $@"/v3/quotes/{symbol}{optionalParameters}";
 
             // DEBUG
-            // Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+
+            // Submit request and return processed results
+            var result = await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
+
+            return result;
+        }
+
+        /// <summary>
+        /// TEST: Special method to only retrieve a window of quotes
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="order"></param>
+        /// <param name="limit"></param>
+        /// <param name="sort"></param>
+        /// <returns></returns>
+        public async Task<RestQuotes_Result[]> Quotes_Async(
+            string symbol,
+            long from,
+            long to,
+            PolygonOrder? order,
+            int? limit,
+            PolygonTradeQuoteSort? sort)
+        {
+            // Build optional parameters string                
+            string optionalParameters = OptionalParametersStringBuilder(
+                (nameof(order), order),
+                (nameof(limit), limit),
+                (nameof(sort), sort));
+
+            string timestampFilter = $"?timestamp.gte={from}&timestamp.lt={to}&";
+
+            // Base request string with optional parameters appended
+            string reqStr = $@"/v3/quotes/{symbol}{timestampFilter}{optionalParameters}";
+
+            // DEBUG
+            Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
 
             // Submit request and return processed results
             return await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr);
@@ -556,6 +683,29 @@ namespace PolygonApiClient.RESTClient
 
             // Submit request and return processed results
             return await processRestRequestSingleResultAsync<RestLastQuote_Response, RestLastQuote_Result>(reqStr);
+        }
+
+
+        public async Task<RestQuotes_Result> Last_Quote_Async(
+            string symbol,
+            long timestamp)
+        {
+            // Build optional parameters string                
+            string optionalParameters = OptionalParametersStringBuilder(
+                (nameof(timestamp), timestamp),
+                ("timestampFilter", PolygonFilterParams.lte),
+                ("limit", 1));
+
+            // Base request string with optional parameters appended
+            string reqStr = $@"/v3/quotes/{symbol}{optionalParameters}";
+
+            // DEBUG
+            //Console.WriteLine($"{MethodBase.GetCurrentMethod()} {reqStr}");
+
+            // Submit request and return processed results
+            var ret = await processRestRequestArrayResultAsync<RestQuotes_Response, RestQuotes_Result>(reqStr, true);
+
+            return ret.SingleOrDefault();
         }
 
         // ---------- Snapshots ----------

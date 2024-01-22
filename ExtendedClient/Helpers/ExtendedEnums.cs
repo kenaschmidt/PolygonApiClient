@@ -12,4 +12,11 @@ namespace PolygonApiClient.ExtendedClient
         unknown = 0,
         buy = 1
     }
+
+    public enum QuoteType
+    {
+        bid = -1,
+        midpoint = 0,
+        ask = 1
+    }
 }

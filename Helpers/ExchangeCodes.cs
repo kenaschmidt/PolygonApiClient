@@ -49,4 +49,11 @@ namespace PolygonApiClient
         [Description("Nasdaq Philadelphia Exchange Options")] XPHO = 323,
         [Description("Cboe BZX Options Exchange")] BATO = 325
     }
+
+    public enum TradeReportingFacility
+    {
+        [Description("FINRA/Nasdaq TRF Carteret NJ")] FINRA_NASDAQ_NJ = 201,
+        [Description("FINRA/Nasdaq TRF Chicgo IL")] FINRA_NASDAQ_IL = 202,
+        [Description("FINRA/NYSE TRF")] FINRA_NYSE = 203
+    }
 }

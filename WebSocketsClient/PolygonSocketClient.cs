@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -218,26 +218,26 @@ namespace PolygonApiClient.WebSocketsClient
         /// <exception cref="Exception"></exception>
         private void processMessage(string message)
         {
-            var objs = JsonConvert.DeserializeObject<JArray>(message);
+            var objs = JsonSerializer.Deserialize<JsonArray>(message);
 
             foreach (var obj in objs)
             {
-                switch (obj.Value<string>("ev"))
+                switch (obj.GetValue<string>())
                 {
                     case "status":
-                        statusMessageHandler(obj.ToObject<Socket_Message>());
+                        statusMessageHandler(obj.GetValue<Socket_Message>());
                         break;
                     case "AM":
-                        aggregateMinuteMessageHandler(obj.ToObject<Socket_Aggregate>());
+                        aggregateMinuteMessageHandler(obj.GetValue<Socket_Aggregate>());
                         break;
                     case "A":
-                        aggregateSecondMessageHandler(obj.ToObject<Socket_Aggregate>());
+                        aggregateSecondMessageHandler(obj.GetValue<Socket_Aggregate>());
                         break;
                     case "T":
-                        tradeMessageHandler(obj.ToObject<Socket_Trade>());
+                        tradeMessageHandler(obj.GetValue<Socket_Trade>());
                         break;
                     case "Q":
-                        quoteMessageHandler(obj.ToObject<Socket_Quote>());
+                        quoteMessageHandler(obj.GetValue<Socket_Quote>());
                         break;
                     default:
                         throw new Exception("Unknown Socket event type");
@@ -277,15 +277,15 @@ namespace PolygonApiClient.WebSocketsClient
 
         #region Socket Handlers
 
-        private Dictionary<string, SocketHandler> socketHandlers = new Dictionary<string, SocketHandler>();
+        private Dictionary<string, PolygonSocketHandler> socketHandlers = new Dictionary<string, PolygonSocketHandler>();
 
-        public SocketHandler GetSocketHandler(string symbol)
+        public PolygonSocketHandler GetSocketHandler(string symbol)
         {
             if (socketHandlers.TryGetValue(symbol, out var ret))
                 return ret;
             else
             {
-                socketHandlers.Add(symbol, new SocketHandler(symbol));
+                socketHandlers.Add(symbol, new PolygonSocketHandler(symbol));
                 return GetSocketHandler(symbol);
             }
         }
@@ -294,70 +294,89 @@ namespace PolygonApiClient.WebSocketsClient
 
         #region Data Request Methods
 
-        public SocketHandler Aggregate_Second_Bars_Streaming(string symbol, bool subscribe = true)
+        public async Task<PolygonSocketHandler> Aggregate_Second_Bars_Streaming(string symbol, bool subscribe = true)
         {
             // A.
+
+            PolygonSocketHandler ret = null;
+
             if (subscribe)
-                return subscribeStreaming(symbol, "A.");
+                ret = await subscribeStreamingAsync(symbol, "A.");
             else
-            {
-                unsubscribeStreaming(symbol, "A.");
-                return null;
-            }
+                ret = await unsubscribeStreamingAsync(symbol, "A.");
+
+            ret.SecondsStreaming = subscribe;
+            return ret;
         }
 
-        public SocketHandler Aggregate_Minute_Bars_Streaming(string symbol, bool subscribe = true)
+        public async Task<PolygonSocketHandler> Aggregate_Minute_Bars_Streaming(string symbol, bool subscribe = true)
         {
             // AM.
+
+            PolygonSocketHandler ret = null;
+
             if (subscribe)
-                return subscribeStreaming(symbol, "AM.");
+                ret = await subscribeStreamingAsync(symbol, "AM.");
             else
-            {
-                unsubscribeStreaming(symbol, "AM.");
-                return null;
-            }
+                ret = await unsubscribeStreamingAsync(symbol, "AM.");
+
+            ret.MinutesStreaming = subscribe;
+            return ret;
+
         }
 
-        public SocketHandler Trades_Streaming(string symbol, bool subscribe = true)
+        public async Task<PolygonSocketHandler> Trades_Streaming(string symbol, bool subscribe = true)
         {
             // T.
+
+            PolygonSocketHandler ret = null;
+
             if (subscribe)
-                return subscribeStreaming(symbol, "T.");
+                ret = await subscribeStreamingAsync(symbol, "T.");
             else
-            {
-                unsubscribeStreaming(symbol, "T.");
-                return null;
-            }
+                ret = await unsubscribeStreamingAsync(symbol, "T.");
+
+            ret.TradesStreaming = subscribe;
+            return ret;
+
         }
 
-        public SocketHandler Quotes_Streaming(string symbol, bool subscribe = true)
+        public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, bool subscribe = true)
         {
             // Q.
+
+            PolygonSocketHandler ret = null;
+
             if (subscribe)
-                return subscribeStreaming(symbol, "Q.");
+                ret = await subscribeStreamingAsync(symbol, "Q.");
             else
-            {
-                unsubscribeStreaming(symbol, "Q.");
-                return null;
-            }
+                ret = await unsubscribeStreamingAsync(symbol, "Q.");
+
+            ret.QuotesStreaming = subscribe;
+            return ret;
+
         }
 
-        private SocketHandler subscribeStreaming(string symbol, string prefix)
+        private async Task<PolygonSocketHandler> subscribeStreamingAsync(string symbol, string prefix)
         {
             string reqStr = @"{""action"":""subscribe"", ""params"":""" + prefix + symbol.ToUpper() + @"""}";
 
             var ret = GetSocketHandler(symbol);
 
-            sendAsync(reqStr).Wait();
+            await sendAsync(reqStr);
 
             return ret;
         }
 
-        private void unsubscribeStreaming(string symbol, string prefix)
+        private async Task<PolygonSocketHandler> unsubscribeStreamingAsync(string symbol, string prefix)
         {
             string reqStr = @"{""action"":""unsubscribe"", ""params"":""" + prefix + symbol.ToUpper() + @"""}";
 
-            sendAsync(reqStr).Wait();
+            var ret = GetSocketHandler(symbol);
+
+            await sendAsync(reqStr);
+
+            return ret;
         }
 
         #endregion

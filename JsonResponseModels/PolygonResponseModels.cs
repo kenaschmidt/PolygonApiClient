@@ -1,5 +1,4 @@
-﻿//using Newtonsoft.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 
@@ -196,7 +195,7 @@ namespace PolygonApiClient
         [JsonPropertyName("ticker")]
         public string Symbol { get; set; }
     }
-    public class RestPreviousClose_Result
+    public class RestPreviousClose_Result : IPolygonBar
     {
         [JsonPropertyName("T")]
         public string Symbol { get; set; }
@@ -214,7 +213,7 @@ namespace PolygonApiClient
         public double Close { get; set; }
 
         [JsonPropertyName("v")]
-        public double Volume { get; set; }
+        public long Volume { get; set; }
 
         [JsonPropertyName("n")]
         public int Number_Of_Trades { get; set; }
@@ -277,13 +276,13 @@ namespace PolygonApiClient
     public class RestLastTrade_Response : Rest_Response<RestLastTrade_Result>
     {
     }
-    public class RestLastTrade_Result
+    public class RestLastTrade_Result : IPolygonTrade
     {
         [JsonPropertyName("T")]
         public string Symbol { get; set; }
 
         [JsonPropertyName("c")]
-        public int[] Conditions { get; set; }
+        public int[] Trade_Conditions { get; set; }
 
         [JsonPropertyName("e")]
         public int Correction { get; set; }
@@ -373,13 +372,13 @@ namespace PolygonApiClient
     public class RestLastQuote_Response : Rest_Response<RestLastQuote_Result>
     {
     }
-    public class RestLastQuote_Result
+    public class RestLastQuote_Result : IPolygonQuote
     {
         [JsonPropertyName("P")]
         public double Ask_Price { get; set; }
 
         [JsonPropertyName("S")]
-        public int Ask_Size_Lots { get; set; }
+        public long Ask_Size { get; set; }
 
         [JsonPropertyName("T")]
         public string Symbol { get; set; }
@@ -400,7 +399,7 @@ namespace PolygonApiClient
         public double Bid_Price { get; set; }
 
         [JsonPropertyName("s")]
-        public int Bid_Size_Lots { get; set; }
+        public long Bid_Size { get; set; }
 
         [JsonPropertyName("q")]
         public long Sequence_Number { get; set; }

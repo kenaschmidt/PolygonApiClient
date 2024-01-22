@@ -6,19 +6,17 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 
 namespace PolygonApiClient.ExtendedClient
 {
-    public static partial class OptionsPricing
+    public static partial class OptionMath
     {
 
         public const double CalendarDaysPerYear = 365.0;
 
-        private static double RiskFreeRate_SOFR = 0.045;
-        public static double RiskFreeRate(DateTime date)
-        {
-            return RiskFreeRate_SOFR;
-        }
+        public static double RiskFreeRate_SOFR = 0.045;
+
 
         //public static double RealizedVolatility(List<PriceBar> bars)
         //{
@@ -139,6 +137,18 @@ namespace PolygonApiClient.ExtendedClient
             return d_2;
         }
 
+        /// <summary>
+        /// Returns the standard deviation of returns for a given volatility and time
+        /// </summary>
+        /// <param name="price">Security price</param>
+        /// <param name="volatility">Per year</param>
+        /// <param name="deltaT">As fraction of 1 calendar year</param>
+        /// <returns></returns>
+        public static double priceStdDev(double price, double volatility, double deltaT)
+        {
+            return (Math.Sqrt(deltaT) * volatility) * price;
+        }
+
         #endregion
 
         #region First Order Greeks
@@ -165,8 +175,6 @@ namespace PolygonApiClient.ExtendedClient
 
             var a = n(d1(underlyingPrice, optionStrikePrice, calendarDaysToExpiry, riskFreeRatePercent, volatilityPercent, dividendYieldPercent));
             var b = underlyingPrice * volatilityPercent * Math.Sqrt(T);
-
-            Console.WriteLine($"My num: {a:0.0000}  My denom: {b:0.0000}");
 
             return a / b;
         }
@@ -234,9 +242,9 @@ namespace PolygonApiClient.ExtendedClient
         //
         // Elasticity (leverage): gives the percentage change in an option price per 1% change in the underlying stock price
         //
-        public static double Elasticity(double underlyingPrice, double optionPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
+        public static double Lambda_Elasticity(double underlyingPrice, double optionPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
         {
-            return SpotDelta(underlyingPrice, optionType, optionStrikePrice, calendarDaysToExpiry, volatilityPercent, riskFreeRatePercent, dividendYieldPercent) * (underlyingPrice / optionPrice);
+            return SpotDelta(underlyingPrice, optionType, optionStrikePrice, calendarDaysToExpiry, volatilityPercent, riskFreeRatePercent, dividendYieldPercent) * (underlyingPrice / optionPrice) / 100;
         }
 
         //
@@ -264,7 +272,7 @@ namespace PolygonApiClient.ExtendedClient
         //
         // Vomma: gives the change in Vega for  change in IV 
         //
-        public static double Vomma_VegaSensitivity(double underlyingPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
+        public static double Vomma_VegaVolSensitivity(double underlyingPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
         {
             double vega1 = SpotVega(underlyingPrice, optionStrikePrice, calendarDaysToExpiry, volatilityPercent, riskFreeRatePercent, dividendYieldPercent);
             double vega2 = SpotVega(underlyingPrice, optionStrikePrice, calendarDaysToExpiry, (volatilityPercent + .01), riskFreeRatePercent, dividendYieldPercent);
@@ -300,7 +308,7 @@ namespace PolygonApiClient.ExtendedClient
         //
         // Zomma: gives the rate of change for Gamma for a change in IV
         //
-        public static double Zomma_GammaSensitivityVol(double underlyingPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
+        public static double Zomma_GammaVolSensitivity(double underlyingPrice, OptionType optionType, double optionStrikePrice, double calendarDaysToExpiry, double volatilityPercent, double riskFreeRatePercent, double dividendYieldPercent)
         {
             double gamma1 = SpotGamma(underlyingPrice, optionStrikePrice, calendarDaysToExpiry, volatilityPercent, riskFreeRatePercent, dividendYieldPercent);
             double gamma2 = SpotGamma(underlyingPrice, optionStrikePrice, calendarDaysToExpiry, (volatilityPercent + .01), riskFreeRatePercent, dividendYieldPercent);
@@ -325,7 +333,7 @@ namespace PolygonApiClient.ExtendedClient
     /// <summary>
     /// ChatGPT generated code
     /// </summary>
-    public static partial class OptionsPricing
+    public static partial class OptionMath
     {
         #region Public Calculation Methods
 
@@ -433,20 +441,6 @@ namespace PolygonApiClient.ExtendedClient
             return optionValues[0];
         }
 
-        public static double OptionLambda(double underlyingPrice, double optionPrice, double optionDelta)
-        {
-            // Calculate the percentage change in the underlying price
-            double underlyingPercentChange = 0.01;
-
-            // Calculate the change in the option price for a 1% change in the underlying price
-            double optionPriceChange = optionDelta * underlyingPrice * underlyingPercentChange;
-
-            // Calculate the Lambda of the option
-            double optionLambda = optionPriceChange / optionPrice * 100;
-
-            return optionLambda;
-        }
-
         public static double ImpliedVolatility(
        OptionType optionType,
        double underlyingPrice,
@@ -460,10 +454,10 @@ namespace PolygonApiClient.ExtendedClient
             double step = 1.00;
 
             // Maximum number of iterations
-            int maxIterations = 100;
+            int maxIterations = 1000;
 
             // Tolerance for convergence
-            double tolerance = 0.001;
+            double tolerance = 0.01;
 
             // Iteratively solve for the implied volatility
 
@@ -491,10 +485,82 @@ namespace PolygonApiClient.ExtendedClient
 
             if (iterations == maxIterations)
             {
-                throw new ApplicationException("Implied volatility did not converge");
+                //    throw new ApplicationException("Implied volatility did not converge");
+                return 0.0;
             }
 
             return volatilityGuess;
+        }
+
+        private static double Ui(double Si, double Si_1)
+        {
+            var ret = Math.Log(Si / Si_1);
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns the first summation used in the volatility estimate equation
+        /// </summary>
+        /// <param name="vals"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static double _volEst_1(List<double> vals)
+        {
+            if (vals.Count < 2)
+                throw new ArgumentException("_volEst_1 error; not enough values provided");
+
+            double ret = 0.0;
+            for (int i = 1; i < vals.Count; i++)
+            {
+                ret += Math.Pow(Ui(vals[i], vals[i - 1]), 2);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns the second summation used in the volatility estimate equation
+        /// </summary>
+        /// <param name="vals"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static double _volEst_2(List<double> vals)
+        {
+            if (vals.Count < 2)
+                throw new ArgumentException("_volEst_1 error; not enough values provided");
+
+            double ret = 0.0;
+            for (int i = 1; i < vals.Count; i++)
+            {
+                ret += Ui(vals[i], vals[i - 1]);
+            }
+            return Math.Pow(ret, 2);
+        }
+
+        /// <summary>
+        /// Returns an estimate for the volatility of an instrument based on a list of price bars
+        /// </summary>
+        /// <param name="priceBars"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static double RealizedVolatility(List<Bar> priceBars)
+        {
+            if (!priceBars.SameBarSizeAll())
+                throw new Exception("Bar sizes are not homogenous");
+
+            double t = TimeHelpers.FractionOfCalendarYear(priceBars.First().BarTimespan, priceBars.First().BarTimespanMultiplier);
+
+            double n = priceBars.Count - 1;
+
+            var priceVals = (from b in priceBars select b.Close).ToList();
+
+            double s_1 = (1 / (n - 1)) * _volEst_1(priceVals);
+            double s_2 = (1 / (n * (n - 1)) * _volEst_2(priceVals));
+
+            double s = Math.Sqrt(s_1 - s_2);
+
+            double volEst = (s / Math.Sqrt(t));
+
+            return volEst;
         }
     }
 }

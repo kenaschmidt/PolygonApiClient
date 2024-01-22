@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using PolygonApiClient.Helpers;
 using PolygonApiClient;
@@ -318,6 +319,36 @@ namespace PolygonApiClient
             }
         }
 
+
+        public async Task<RestTrades_Result[]> Trades_Async(
+              string symbol,
+              DateTime from,
+              DateTime to,
+              PolygonOrder? order = null,
+              int? limit = null,
+              PolygonTradeQuoteSort? sort = null)
+        {
+            try
+            {
+                // Normalize parameters
+                symbol = NormalizeSymbol(symbol);
+
+                return await restClient.Trades_Async(
+                    symbol,
+                    from.ESTToUnixNanoseconds(),
+                    to.ESTToUnixNanoseconds(),
+                    order,
+                    limit,
+                    sort);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+
         public async Task<RestLastTrade_Result> Last_Trade_Async(
             string symbol)
         {
@@ -329,6 +360,27 @@ namespace PolygonApiClient
                 // Call async request method
                 return await restClient.Last_Trade_Async(
                     symbol);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<RestTrades_Result> Last_Trade_Async(
+            string symbol,
+            DateTime asOf)
+        {
+            try
+            {
+                // Normalize parameters
+                symbol = NormalizeSymbol(symbol);
+                long timestamp = asOf.ESTToUnixNanoseconds();
+
+                // Call async request method
+                return await restClient.Last_Trade_Async(
+                    symbol,
+                    timestamp);
             }
             catch (Exception ex)
             {
@@ -378,6 +430,34 @@ namespace PolygonApiClient
             }
         }
 
+        public async Task<RestQuotes_Result[]> Quotes_Async(
+              string symbol,
+              DateTime from,
+              DateTime to,
+              PolygonOrder? order = null,
+              int? limit = null,
+              PolygonTradeQuoteSort? sort = null)
+        {
+            try
+            {
+                // Normalize parameters
+                symbol = NormalizeSymbol(symbol);
+
+                return await restClient.Quotes_Async(
+                    symbol,
+                    from.ESTToUnixNanoseconds(),
+                    to.ESTToUnixNanoseconds(),
+                    order,
+                    limit,
+                    sort);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public async Task<RestLastQuote_Result> Last_Quote_Async(
             string symbol)
         {
@@ -389,6 +469,27 @@ namespace PolygonApiClient
                 // Call async request method
                 return await restClient.Last_Quote_Async(
                     symbol);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<RestQuotes_Result> Last_Quote_Async(
+            string symbol,
+            DateTime asOf)
+        {
+            try
+            {
+                // Normalize parameters
+                symbol = NormalizeSymbol(symbol);
+                long timestamp = asOf.ESTToUnixNanoseconds();
+
+                // Call async request method
+                return await restClient.Last_Quote_Async(
+                    symbol,
+                    timestamp);
             }
             catch (Exception ex)
             {
@@ -1145,24 +1246,24 @@ namespace PolygonApiClient
         //
         // ---------------------------
 
-        public SocketHandler Aggregate_Second_Bars_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Aggregate_Second_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
         {
-            return GetClient(endpoint).Aggregate_Second_Bars_Streaming(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
         }
 
-        public SocketHandler Aggregate_Minute_Bars_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Aggregate_Minute_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
         {
-            return GetClient(endpoint).Aggregate_Minute_Bars_Streaming(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
         }
 
-        public SocketHandler Trades_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
         {
-            return GetClient(endpoint).Trades_Streaming(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
         }
 
-        public SocketHandler Quotes_Streaming(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
         {
-            return GetClient(endpoint).Quotes_Streaming(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
         }
 
         #endregion

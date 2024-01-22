@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace PolygonApiClient
 {
+    //
+    // These interfaces are meant to facilitate interoperability of different REST/Socket response formats in extended client implementations.
+    //
+
     public interface IPolygonTrade
     {
         int[] Trade_Conditions { get; set; }
@@ -17,32 +20,42 @@ namespace PolygonApiClient
 
         int TRF_ID { get; set; }
 
-        Int64 Size { get; set; }
+        long Size { get; set; }
     }
+
     public interface IPolygonQuote
     {
         int Ask_Exchange { get; set; }
 
         double Ask_Price { get; set; }
 
-        Int64 Ask_Size { get; set; }
+        long Ask_Size { get; set; }
 
         int Bid_Exchange { get; set; }
 
         double Bid_Price { get; set; }
 
-        Int64 Bid_Size { get; set; }
+        long Bid_Size { get; set; }
     }
-    public interface IPolygonOptionContract
+
+    public interface IPolygonBar
     {
-        string Symbol { get; set; }
-        string Contract_Type { get; set; }
-        string Exercise_Style { get; set; }
-        string Expiration_Date { get; set; }
-        int Shares_Per_Contract { get; set; }
-        double Strike_Price { get; set; }
+        long Volume { get; set; }
+
+        double VWAP { get; set; }
+
+        double Open { get; set; }
+
+        double Close { get; set; }
+
+        double High { get; set; }
+
+        double Low { get; set; }
+
+        long Timestamp_Start_Ms { get; set; }
     }
-    public interface IPolygonOptionMarketData
+
+    public interface IPolygonOptionData
     {
         double Break_Even_Price { get; set; }
 

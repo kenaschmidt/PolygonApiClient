@@ -133,5 +133,10 @@ namespace PolygonApiClient.Helpers
         {
             return this.Nanoseconds.CompareTo(other.Nanoseconds);
         }
+
+        public static PolygonTimestamp EmptyTimestamp()
+        {
+            return new PolygonTimestamp() { _UTC = DateTime.MinValue };
+        }
     }
 }

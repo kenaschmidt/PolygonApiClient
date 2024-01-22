@@ -9,7 +9,7 @@ namespace PolygonApiClient
     /// <summary>
     /// Go-between class for managing streaking socket data
     /// </summary>
-    public class SocketHandler : IEquatable<SocketHandler>
+    public class PolygonSocketHandler : IEquatable<PolygonSocketHandler>
     {
         #region Events
 
@@ -22,7 +22,12 @@ namespace PolygonApiClient
 
         public string Symbol { get; }
 
-        public SocketHandler(string symbol)
+        public bool QuotesStreaming { get; set; } = false;
+        public bool TradesStreaming { get; set; } = false;
+        public bool SecondsStreaming { get; set; } = false;
+        public bool MinutesStreaming { get; set; } = false;
+
+        public PolygonSocketHandler(string symbol)
         {
             Symbol = symbol;
         }
@@ -46,9 +51,9 @@ namespace PolygonApiClient
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as SocketHandler);
+            return Equals(obj as PolygonSocketHandler);
         }
-        public bool Equals(SocketHandler other)
+        public bool Equals(PolygonSocketHandler other)
         {
             return !(other is null) &&
                    Symbol == other.Symbol;
@@ -57,11 +62,11 @@ namespace PolygonApiClient
         {
             return -1758840423 + EqualityComparer<string>.Default.GetHashCode(Symbol);
         }
-        public static bool operator ==(SocketHandler left, SocketHandler right)
+        public static bool operator ==(PolygonSocketHandler left, PolygonSocketHandler right)
         {
-            return EqualityComparer<SocketHandler>.Default.Equals(left, right);
+            return EqualityComparer<PolygonSocketHandler>.Default.Equals(left, right);
         }
-        public static bool operator !=(SocketHandler left, SocketHandler right)
+        public static bool operator !=(PolygonSocketHandler left, PolygonSocketHandler right)
         {
             return !(left == right);
         }
