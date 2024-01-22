@@ -1,21 +1,29 @@
-﻿using System;
+﻿using PolygonApiClient.ExtendedClient.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace PolygonApiClient.ExtendedClient
 {
     public class Option : Security
     {
-        public OptionExpiry ExpiryCurve { get; set; }
-
-        public Stock UnderlyingStock { get; }
-
         public IPolygonOptionData optionData { get; }
 
-        public virtual int Open_Interest => optionData.Open_Interest;
+
+        public Stock UnderlyingStock { get; }
+        public OptionExpiry ExpiryCurve { get; set; }
+
 
         public DateTime Expiry { get; protected set; }
         public OptionType OptionType { get; protected set; }
+
+
+        public Greeks Greeks { get; set; }
+
+
         public virtual double Strike => optionData.Details.Strike_Price;
         public virtual int Shares_Per_Contract => optionData.Details.Shares_Per_Contract;
+        public virtual int Open_Interest => optionData.Open_Interest;
+
 
         public Option(IPolygonOptionData optionData, Stock underlyingStock) : base(optionData.Details.Symbol, underlyingStock.dataProvider)
         {
@@ -32,6 +40,16 @@ namespace PolygonApiClient.ExtendedClient
             UnderlyingStock = underlyingStock;
         }
 
-    }
 
+        private RestSnapshotHandler snapshotHandler_greeks { get; set; }
+        public void StreamGreeksSnapshots()
+        {
+            snapshotHandler_greeks = dataProvider.Stream_Quotes_Trades_Snapshots(this);
+        }
+        public void StopGreeksSnapshots()
+        {
+            snapshotHandler_greeks.Stop();
+            snapshotHandler_greeks = null;
+        }
+    }
 }

@@ -37,8 +37,8 @@ namespace PolygonApiClient.ExtendedClient
 
         public async static Task<double> IV_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = await me.UnderlyingStock.LastQuoteAsync(asOf);
-            var optionLastQuote = await me.LastQuoteAsync(asOf);
+            var underlyingLastQuote = await me.UnderlyingStock.LatestQuoteAsync(asOf);
+            var optionLastQuote = await me.LatestQuoteAsync(asOf);
 
             return OptionMath.ImpliedVolatility(
                 me.OptionType,
@@ -50,7 +50,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> IV_Async(this Option me, DateTime asOf, double underlyingPrice)
         {
-            var optionLastQuote = me.LastQuoteAsync(asOf);
+            var optionLastQuote = me.LatestQuoteAsync(asOf);
 
             return OptionMath.ImpliedVolatility(
                 me.OptionType,
@@ -73,12 +73,15 @@ namespace PolygonApiClient.ExtendedClient
 
         public async static Task<Greeks> Greeks(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
-            var optionLastQuote = (await me.LastQuoteAsync(asOf)).MidpointPrice;
+            var optionLastQuote = (await me.LatestQuoteAsync(asOf)).MidpointPrice;
+
+            var iv = me.IV(asOf, underlyingLastQuote, optionLastQuote);
 
             return new Greeks(
                 asOf,
+                iv,
                 Delta(me, asOf, underlyingLastQuote, optionLastQuote),
                 Gamma(me, asOf, underlyingLastQuote, optionLastQuote),
                 Theta(me, asOf, underlyingLastQuote, optionLastQuote),
@@ -99,7 +102,7 @@ namespace PolygonApiClient.ExtendedClient
 
         public async static Task<double> Delta_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -116,7 +119,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Gamma_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -132,7 +135,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Theta_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -149,7 +152,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Vega_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -165,7 +168,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Vanna_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -182,7 +185,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public static async Task<double> Charm_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -199,9 +202,9 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Lambda_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
-            var optionLastQuote = (await me.LastQuoteAsync(asOf)).MidpointPrice;
+            var optionLastQuote = (await me.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = me.IV(asOf, underlyingLastQuote, optionLastQuote);
 
@@ -219,7 +222,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Vomma_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -236,7 +239,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Veta_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -253,7 +256,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Speed_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -270,7 +273,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Zomma_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -287,7 +290,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<double> Color_Async(this Option me, DateTime asOf)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 
@@ -638,7 +641,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public async static Task<List<(double price, double lambda)>> LambdaCurve_Async(this Option me, DateTime asOf, double lowPrice, double highPrice, double step = 0.01)
         {
-            var underlyingLastQuote = (await me.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var underlyingLastQuote = (await me.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var iv = await me.IV_Async(asOf, underlyingLastQuote);
 

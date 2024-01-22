@@ -92,6 +92,7 @@
     <Compile Include="ExtendedClient\Models\Portfolio.cs" />
     <Compile Include="ExtendedClient\Models\Position.cs" />
     <Compile Include="ExtendedClient\Models\Quote.cs" />
+    <Compile Include="ExtendedClient\Models\RestSnapshotHandler.cs" />
     <Compile Include="ExtendedClient\Models\Security.cs" />
     <Compile Include="ExtendedClient\Models\Stock.cs" />
     <Compile Include="ExtendedClient\Models\Tick.cs" />

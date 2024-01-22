@@ -28,5 +28,12 @@ namespace PolygonApiClient.ExtendedClient
 
         Task<Quote> Quote_Async(Security me, DateTime? asOf = null);
 
+        Task<PolygonSocketHandler> Stream_Quotes(Security me, bool subscribe);
+        Task<PolygonSocketHandler> Stream_Trades(Security me, bool subscribe);
+        Task<PolygonSocketHandler> Stream_Second_Bars(Security me, bool subscribe);
+        Task<PolygonSocketHandler> Stream_Minute_Bars(Security me, bool subscribe);
+
+        RestSnapshotHandler Stream_Quotes_Trades_Snapshots(Security security, int secondsInterval = 1);
+        RestSnapshotHandler Stream_Greeks_Snapshots(Option option, int secondsInterval = 10);
     }
 }

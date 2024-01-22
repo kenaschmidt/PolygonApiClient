@@ -37,7 +37,7 @@ namespace PolygonApiClient.ExtendedClient.Models
 
         public async Task<double> PositionDelta_Dollars_Async(DateTime asOf)
         {
-            var p = Option.UnderlyingStock.LastQuoteAsync(asOf);
+            var p = Option.UnderlyingStock.LatestQuoteAsync(asOf);
             var s = PositionDelta_Shares_Async(asOf);
 
             return (await p).MidpointPrice * (await s);
@@ -45,7 +45,7 @@ namespace PolygonApiClient.ExtendedClient.Models
 
         public async Task<List<(double price, double deltaDollars)>> PositionDeltaCurve_Dollars_Async(DateTime asOf, double lowPrice, double highPrice, double step = 0.01)
         {
-            var p = (await Option.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var p = (await Option.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var dCurve = await Option.DeltaCurve_Async(asOf, lowPrice, highPrice, step);
 
@@ -55,7 +55,7 @@ namespace PolygonApiClient.ExtendedClient.Models
         }
         public async Task<List<(double price, double deltaShares)>> PositionDeltaCurve_Shares_Async(DateTime asOf, double lowPrice, double highPrice, double step = 0.01)
         {
-            var p = (await Option.UnderlyingStock.LastQuoteAsync(asOf)).MidpointPrice;
+            var p = (await Option.UnderlyingStock.LatestQuoteAsync(asOf)).MidpointPrice;
 
             var dCurve = await Option.DeltaCurve_Async(asOf, lowPrice, highPrice, step);
 
@@ -80,7 +80,7 @@ namespace PolygonApiClient.ExtendedClient.Models
         }
         public async Task<double> PositionGamma_Dollars_Async(DateTime asOf)
         {
-            var p = Option.UnderlyingStock.LastQuoteAsync(asOf);
+            var p = Option.UnderlyingStock.LatestQuoteAsync(asOf);
             var s = PositionGamma_Shares_Async(asOf);
 
             return (await p).MidpointPrice * (await s);

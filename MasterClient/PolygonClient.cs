@@ -1246,24 +1246,24 @@ namespace PolygonApiClient
         //
         // ---------------------------
 
-        public async Task<PolygonSocketHandler> Aggregate_Second_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Aggregate_Second_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
         }
 
-        public async Task<PolygonSocketHandler> Aggregate_Minute_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Aggregate_Minute_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
         }
 
-        public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
         }
 
-        public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint)
+        public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, true);
+            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
         }
 
         #endregion

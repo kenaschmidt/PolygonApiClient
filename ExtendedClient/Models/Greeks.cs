@@ -10,6 +10,8 @@ namespace PolygonApiClient.ExtendedClient.Models
     public class Greeks
     {
         public DateTime AsOf { get; }
+
+        public double IV { get; }
         public double Delta { get; }
         public double Gamma { get; }
         public double Theta { get; }
@@ -23,9 +25,10 @@ namespace PolygonApiClient.ExtendedClient.Models
         public double Color { get; }
         public double Lambda { get; }
 
-        public Greeks(DateTime asOf, double delta, double gamma, double theta, double vega, double vanna, double veta, double charm, double vomma, double zomma, double speed, double color, double lambda)
+        public Greeks(DateTime asOf, double iv, double delta, double gamma, double theta, double vega, double vanna, double veta, double charm, double vomma, double zomma, double speed, double color, double lambda)
         {
             AsOf = asOf;
+            IV = iv;
             Delta = delta;
             Gamma = gamma;
             Theta = theta;

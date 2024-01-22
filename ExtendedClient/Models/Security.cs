@@ -68,24 +68,16 @@ namespace PolygonApiClient.ExtendedClient
             return Bars.GetBars(timespanMultiplier, timespan, day.Date, day.Date.AddDays(1).AddTicks(-1));
         }
 
-        #region Pricing Data
+        #region Data Request Methods / REST Async
 
-        //
-        // Realtime (latest) pricing
-        //
-        public async Task<Quote> LastQuoteAsync()
+        public async Task<Quote> LatestQuoteAsync()
         {
             if (QuotesStreaming)
                 return LastQuote;
 
             return await dataProvider.Quote_Async(this);
         }
-
-        //
-        // Historical (As-of) pricing
-        //
-
-        public async Task<Quote> LastQuoteAsync(DateTime asOf)
+        public async Task<Quote> LatestQuoteAsync(DateTime asOf)
         {
             return await dataProvider.Quote_Async(this, asOf);
         }
@@ -125,7 +117,6 @@ namespace PolygonApiClient.ExtendedClient
     /// </summary>
     public abstract partial class Security
     {
-
 
         public event EventHandler<Trade> TradeReceived;
         private void OnTradeReceived(Trade trade)
@@ -206,5 +197,78 @@ namespace PolygonApiClient.ExtendedClient
             OnMinuteBarReceived(bar);
         }
 
+        public async Task StreamQuotes()
+        {
+            if (QuotesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Quotes(this, true));
+        }
+        public async Task StopQuotes()
+        {
+            if (!QuotesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Quotes(this, false));
+        }
+        public async Task StreamTrades()
+        {
+            if (TradesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Trades(this, true));
+        }
+        public async Task StopTrades()
+        {
+            if (!TradesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Trades(this, false));
+        }
+        public async Task StreamSecondBars()
+        {
+            if (SecondsStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Second_Bars(this, true));
+        }
+        public async Task StopSecondBars()
+        {
+            if (!SecondsStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Second_Bars(this, false));
+        }
+        public async Task StreamMinuteBars()
+        {
+            if (MinutesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Minute_Bars(this, true));
+        }
+        public async Task StopMinuteBars()
+        {
+            if (!MinutesStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Minute_Bars(this, false));
+        }
+
+
+        private RestSnapshotHandler snapshotHandler_quotesTrades { get; set; }
+        public async Task StreamQuotesTradesSnapshots()
+        {
+            await StopTrades();
+            await StopQuotes();
+
+            snapshotHandler_quotesTrades = dataProvider.Stream_Quotes_Trades_Snapshots(this);
+        }
+        public void StopQuotesTradesSnapshots()
+        {
+            snapshotHandler_quotesTrades.Stop();
+            snapshotHandler_quotesTrades = null;
+        }
+
     }
+
 }
