@@ -44,3 +44,19 @@ Socket calls return a `SocketHandler` object which provides a security-specific 
 ### 1/5/24
 
 -Have been working on an `ExtendedClient` which will implement a more user-friendly interface, with a set of models that more closely reflect real-work use cases. No set roadmap for this namespace right now and it's not required for base client functionality, though ome of the base client is being modified to better allow extended features (additional interfaces, etc).
+
+### 1/22/24
+
+-Major rearchitecting of several portions of the client.
+
+-Base client REST response processing changed to use Sytem.Text.JSON (vs Newtonsoft) which decreased deserialization times significantly.  Also needed to implement a few different response-handling methods to manage JSON replies from v1/v2/v3 endpoints which all differed slightly in terms of structure.  Added look-ahead parsing and concurrent deserialization for Next_URL/pagination in response handlers to further decrease processing time.
+
+-Added a couple method signatures to extend functionality for a couple base REST calls (quote and trade snapshot windows which needed multiple 'timestamp' and 'timestampFilter' parameters.
+
+-Completely reworked the extended client; it was quickly getting very cumbersome to load data for a Security manually in order to work with it; now Stocks are passed a reference to the Polygon client at instantiation (which is passed to Options as well when added), and all data/calculation methods are designed to call for required data from within the security itself (so data requirements are static and known at the time of implementation).  Works so far with new Option calcualtions (see below).
+
+-Rewrote all Option extensions for Greeks/Option Math to support new data architecture.  User can call an extension directly from the Option with only a DateTime parameter to return values at that time (ie, `Option.Delta(DateTime)`)
+
+-Adding functionality for REST snapshots to mimick socket connections.  This will allow more granularity in 'streaming' data, a larger field of open streams, and easier data aggregation/manipulation at the time of receipt.
+
+-Completed/tested all Option greek calculations. Pretty confident in accuracy.
