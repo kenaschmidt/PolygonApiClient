@@ -11,8 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace PolygonApiClient.WebSocketsClient
-{
-    public class PolygonSocketClient
+{    public class PolygonSocketClient
     {
         #region Client Events
 
@@ -281,10 +280,14 @@ namespace PolygonApiClient.WebSocketsClient
         public PolygonSocketHandler GetSocketHandler(string symbol)
         {
             if (socketHandlers.TryGetValue(symbol, out var ret))
+            {
+                Console.WriteLine("Return existing socket handler");
                 return ret;
+            }
             else
             {
                 socketHandlers.Add(symbol, new PolygonSocketHandler(symbol));
+                Console.WriteLine("Return new socket handler");
                 return GetSocketHandler(symbol);
             }
         }
@@ -324,10 +327,10 @@ namespace PolygonApiClient.WebSocketsClient
 
         }
 
-        public async Task<PolygonSocketHandler> Trades_Streaming(string symbol, bool subscribe = true)
+        public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, bool subscribe = true)
         {
             // T.
-
+            
             PolygonSocketHandler ret = null;
 
             if (subscribe)

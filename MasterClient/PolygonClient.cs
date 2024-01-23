@@ -1258,7 +1258,7 @@ namespace PolygonApiClient
 
         public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
+            return await GetClient(endpoint).Trades_Streaming_Async(symbol, subscribe);
         }
 
         public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
