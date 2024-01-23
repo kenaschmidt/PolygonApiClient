@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices.ComTypes;
@@ -218,31 +219,29 @@ namespace PolygonApiClient.WebSocketsClient
         /// <exception cref="Exception"></exception>
         private void processMessage(string message)
         {
-            var objs = JsonSerializer.Deserialize<JsonArray>(message);
+            var obj = JsonArray.Parse(message)[0].AsObject();
 
-            foreach (var obj in objs)
+            switch (obj["ev"].ToString())
             {
-                switch (obj.GetValue<string>())
-                {
-                    case "status":
-                        statusMessageHandler(obj.GetValue<Socket_Message>());
-                        break;
-                    case "AM":
-                        aggregateMinuteMessageHandler(obj.GetValue<Socket_Aggregate>());
-                        break;
-                    case "A":
-                        aggregateSecondMessageHandler(obj.GetValue<Socket_Aggregate>());
-                        break;
-                    case "T":
-                        tradeMessageHandler(obj.GetValue<Socket_Trade>());
-                        break;
-                    case "Q":
-                        quoteMessageHandler(obj.GetValue<Socket_Quote>());
-                        break;
-                    default:
-                        throw new Exception("Unknown Socket event type");
-                }
+                case "status":
+                    statusMessageHandler(JsonSerializer.Deserialize<Socket_Message>(obj));
+                    break;
+                case "AM":
+                    aggregateMinuteMessageHandler(JsonSerializer.Deserialize<Socket_Aggregate>(obj));
+                    break;
+                case "A":
+                    aggregateSecondMessageHandler(JsonSerializer.Deserialize<Socket_Aggregate>(obj));
+                    break;
+                case "T":
+                    tradeMessageHandler(JsonSerializer.Deserialize<Socket_Trade>(obj));
+                    break;
+                case "Q":
+                    quoteMessageHandler(JsonSerializer.Deserialize<Socket_Quote>(obj));
+                    break;
+                default:
+                    throw new Exception("Unknown Socket event type");
             }
+
         }
 
         /// <summary>
