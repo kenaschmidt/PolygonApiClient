@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using TradingCalendar;
 
 namespace PolygonApiClient.ExtendedClient
 {
@@ -20,6 +20,8 @@ namespace PolygonApiClient.ExtendedClient
                 return PolygonConnectionEndpoint.stocks;
             if (me is Option _)
                 return PolygonConnectionEndpoint.options;
+            if (me is Index _)
+                return PolygonConnectionEndpoint.indices;
 
             throw new NotImplementedException();
         }
@@ -31,30 +33,14 @@ namespace PolygonApiClient.ExtendedClient
         /// <param name="quote"></param>
         public static void SetTradeSide(this Trade me, Quote quote)
         {
-
-
             if (me.TradePrice <= quote.BidPrice + (quote.Spread / 3))
                 me.TradeSide = TradeSide.sell;
             else if (me.TradePrice >= quote.AskPrice - (quote.Spread / 3))
                 me.TradeSide = TradeSide.buy;
             else
                 me.TradeSide = TradeSide.unknown;
-        }
 
-        /// <summary>
-        /// Filters a list of trades to remove all trades with matching condition codes
-        /// </summary>
-        /// <param name="me"></param>
-        /// <param name="codes"></param>
-        /// <returns></returns>
-        public static List<Trade> RemoveConditionCodes(this List<Trade> me, params TradeConditions[] codes)
-        {
-            var ret = new List<Trade>(me);
-            foreach (var code in codes)
-            {
-                ret.RemoveAll(trd => trd.TickBase.Trade_Conditions != null && trd.TickBase.Trade_Conditions.Contains((int)code));
-            }
-            return ret;
+            me.EffectiveQuote = quote;
         }
 
         /// <summary>
@@ -93,6 +79,10 @@ namespace PolygonApiClient.ExtendedClient
         {
             return new List<IPolygonTrade>(me).ConvertAll<Trade>(t => new Trade(t));
         }
+        public static Trade ToTrade(this IPolygonTrade me)
+        {
+            return new Trade(me);
+        }
 
         /// <summary>
         /// Converts a collection of RestQuote_Results returned from a REST query into a list of local Quote objects which can integrate with Socket quotes
@@ -103,7 +93,6 @@ namespace PolygonApiClient.ExtendedClient
         {
             return new List<IPolygonQuote>(me).ConvertAll<Quote>(q => new Quote(q));
         }
-
         public static Quote ToQuote(this IPolygonQuote me)
         {
             return new Quote(me);
@@ -124,6 +113,18 @@ namespace PolygonApiClient.ExtendedClient
                 ret.Add(new Bar(b, barTimespan, timespanMultiplier));
             }
             return ret;
+        }
+
+        /// <summary>
+        /// Converts an IPolygonBar returned from REST or Socket endpoints to local Bar object
+        /// </summary>
+        /// <param name="me"></param>
+        /// <param name="barTimespan"></param>
+        /// <param name="timespanMultiplier"></param>
+        /// <returns></returns>
+        public static Bar ToBar(this IPolygonBar me, PolygonTimespan barTimespan, int timespanMultiplier)
+        {
+            return (new Bar(me, barTimespan, timespanMultiplier));
         }
 
         /// <summary>
@@ -203,6 +204,11 @@ namespace PolygonApiClient.ExtendedClient
             return me.Where(x => x.TradeSide == TradeSide.sell).ToList();
         }
 
+        public static List<Trade> GetLast(this List<Trade> me, int milliseconds)
+        {
+            return me.Where(x => x.Timestamp.Milliseconds > Calendar.CurrentTimeEst.Millisecond - milliseconds).ToList();
+        }
+
         /// <summary>
         /// Returns a list of all trades or quotes marked with today's date (EST)
         /// </summary>
@@ -235,6 +241,31 @@ namespace PolygonApiClient.ExtendedClient
             t.Timestamp.EST >= start_inclusive &&
             t.Timestamp.EST < end_exclusive).ToList();
         }
+
+        /// <summary>
+        /// Returns a list of ticks that fall between the provided datetimes; inclusive of start, exclusive of end
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="me"></param>
+        /// <param name="start_inclusive"></param>
+        /// <param name="end_exclusive"></param>
+        /// <returns></returns>
+        public static List<T> Between<T>(this ParallelQuery<T> me, DateTime start_inclusive, DateTime end_exclusive) where T : Tick
+        {
+            // Flip the timestamps if input backwards
+            if (start_inclusive > end_exclusive)
+            {
+                var t = end_exclusive;
+                end_exclusive = start_inclusive;
+                start_inclusive = t;
+            }
+
+            return me.Where(t =>
+            t.Timestamp.EST >= start_inclusive &&
+            t.Timestamp.EST < end_exclusive).ToList();
+        }
+
+
 
         /// <summary>
         /// Returns a sum size of all buy trades
@@ -275,10 +306,6 @@ namespace PolygonApiClient.ExtendedClient
         {
             return (me.BuyVolume() - me.SellVolume());
         }
-
-        //
-        // Option Collection Helpers
-        //
 
         /// <summary>
         /// Returns a list of Calls present in a list of Options
@@ -342,8 +369,6 @@ namespace PolygonApiClient.ExtendedClient
             return me.Where(x => x.Expiry == expiry).ToList();
         }
 
-
-
         /// <summary>
         /// Indicates whether or not a trade was executed on a dark pool
         /// </summary>
@@ -355,6 +380,53 @@ namespace PolygonApiClient.ExtendedClient
                 return true;
 
             return false;
+        }
+
+        public static bool IsSweepTrade(this Trade me)
+        {
+            return (me.HasConditionCode(TradeConditions._14) || me.HasConditionCode(TradeConditions._219));
+        }
+
+        public static bool IsOptionsFloorTrade(this Trade me)
+        {
+            return (me.HasConditionCode(TradeConditions._235) ||
+                me.HasConditionCode(TradeConditions._239) ||
+                me.HasConditionCode(TradeConditions._245) ||
+                me.HasConditionCode(TradeConditions._242) ||
+                me.HasConditionCode(TradeConditions._246) ||
+                me.HasConditionCode(TradeConditions._231));
+        }
+
+        public static bool IsNotUpdateVolumeTrade(this Trade me)
+        {
+            foreach (var code in me.Conditions)
+            {
+                if (PolygonExtendedClient.Trade_Conditions_Reference[(int)code].Update_Rules != null &&
+                    PolygonExtendedClient.Trade_Conditions_Reference[(int)code].Update_Rules.consolidated.updates_volume == false)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static List<Trade> ExcludeCodes(this List<Trade> me, params TradeConditions[] codes)
+        {
+            return me.Where(t => !t.Conditions.Any(x => codes.Contains(x))).ToList();
+        }
+
+        public static bool HasConditionCode(this Trade me, TradeConditions code)
+        {
+            return me.TickBase?.Trade_Conditions?.Contains((int)code) ?? false;
+        }
+
+        /// <summary>
+        /// Filters a list of trades to only those executed on a darkpool
+        /// </summary>
+        /// <param name="me"></param>
+        /// <returns></returns>
+        public static List<Trade> DarkpoolTrades(this List<Trade> me)
+        {
+            return me.Where(t => t.IsDarkpoolTrade() == true).ToList();
         }
 
         /// <summary>

@@ -6,10 +6,17 @@ namespace PolygonApiClient.ExtendedClient
 {
     public class Option : Security
     {
+
+        public event EventHandler<Greeks> GreeksChanged;
+        private void OnGreeksChanged()
+        {
+            GreeksChanged?.Invoke(this, this.Greeks);
+        }
+
         public IPolygonOptionData optionData { get; }
 
 
-        public Stock UnderlyingStock { get; }
+        public Security UnderlyingSecurity { get; }
         public OptionExpiry ExpiryCurve { get; set; }
 
 
@@ -17,15 +24,23 @@ namespace PolygonApiClient.ExtendedClient
         public OptionType OptionType { get; protected set; }
 
 
-        public Greeks Greeks { get; set; }
-
+        private Greeks _Greeks { get; set; }
+        public Greeks Greeks
+        {
+            get => _Greeks;
+            set
+            {
+                _Greeks = value;
+                OnGreeksChanged();
+            }
+        }
 
         public virtual double Strike => optionData.Details.Strike_Price;
         public virtual int Shares_Per_Contract => optionData.Details.Shares_Per_Contract;
         public virtual int Open_Interest => optionData.Open_Interest;
 
 
-        public Option(IPolygonOptionData optionData, Stock underlyingStock) : base(optionData.Details.Symbol, underlyingStock.dataProvider)
+        public Option(IPolygonOptionData optionData, Security underlyingSecurity) : base(optionData.Details.Symbol, underlyingSecurity.dataProvider)
         {
             this.optionData = optionData;
             if (optionData != null)
@@ -33,23 +48,45 @@ namespace PolygonApiClient.ExtendedClient
                 Expiry = DateTime.Parse(this.optionData.Details.Expiration_Date);
                 OptionType = (OptionType)Enum.Parse(typeof(OptionType), this.optionData.Details.Contract_Type);
             }
-            UnderlyingStock = underlyingStock;
+            UnderlyingSecurity = underlyingSecurity;
         }
-        public Option(string symbol, Stock underlyingStock) : base(symbol, underlyingStock.dataProvider)
+        public Option(string symbol, Security underlyingSecurity) : base(symbol, underlyingSecurity.dataProvider)
         {
-            UnderlyingStock = underlyingStock;
+            UnderlyingSecurity = underlyingSecurity;
         }
 
 
         private RestSnapshotHandler snapshotHandler_greeks { get; set; }
-        public void StreamGreeksSnapshots()
+        public void StreamGreeksSnapshots(int secondsInterval = 5)
         {
-            snapshotHandler_greeks = dataProvider.Stream_Quotes_Trades_Snapshots(this);
+            if (snapshotHandler_greeks == null)
+                snapshotHandler_greeks = dataProvider.Stream_Greeks_Snapshots(this, secondsInterval);
         }
         public void StopGreeksSnapshots()
         {
-            snapshotHandler_greeks.Stop();
-            snapshotHandler_greeks = null;
+            if (snapshotHandler_greeks != null)
+            {
+                snapshotHandler_greeks.Stop();
+                snapshotHandler_greeks = null;
+            }
+        }
+
+        public override async Task<Quote> LatestQuoteAsync(DateTime asOf)
+        {
+            // For options we may get erroneous 0 values outside of trading hours so we need to adjust...might be a better way to do this
+
+            if (asOf.TimeOfDay < TimeHelpers.MarketRTHOpenEST)
+                asOf = TradingCalendar.Calendar.PriorTradingDay(asOf).AtMarketRTHCloseEST();
+
+            return await dataProvider.Quote_Async(this, asOf);
+        }
+
+        public override async Task<double> LastCalculationValueAsync(DateTime? asOf = null)
+        {
+            if (asOf == null)
+                return (await LatestQuoteAsync()).MidpointPrice;
+            else
+                return (await LatestQuoteAsync(asOf.Value)).MidpointPrice;
         }
     }
 }

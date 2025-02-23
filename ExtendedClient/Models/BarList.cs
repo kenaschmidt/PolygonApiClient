@@ -13,7 +13,7 @@ namespace PolygonApiClient.ExtendedClient
         //
         // Bars are stored in a dictionary with keys of (Timespan, Multiplier) - e.g., (minute,5) or (day,1) - corresponding to the type of aggregate; each key has a list specifically for those bars.
         //
-        protected Dictionary<(PolygonTimespan, int), List<Bar>> barCollection { get; } = new Dictionary<(PolygonTimespan, int), List<Bar>>();
+        protected Dictionary<(PolygonTimespan, int), HashSet<Bar>> barCollection { get; } = new Dictionary<(PolygonTimespan, int), HashSet<Bar>>();
 
         public void AddBars(List<Bar> bars)
         {
@@ -35,35 +35,36 @@ namespace PolygonApiClient.ExtendedClient
                 }
                 else
                 {
-                    if (barCollection.TryGetValue((bars.First().BarTimespan, bars.First().BarTimespanMultiplier), out List<Bar> barList))
+                    if (barCollection.TryGetValue((bars.First().BarTimespan, bars.First().BarTimespanMultiplier), out HashSet<Bar> barList))
                     {
-                        barList.AddRange(bars);
+                        bars.ForEach(x => barList.Add(x));
                     }
                     else
                     {
-                        barCollection.AddAndReturn((bars.First().BarTimespan, bars.First().BarTimespanMultiplier), new List<Bar>()).AddRange(bars);
+                        barList = barCollection.AddAndReturn((bars.First().BarTimespan, bars.First().BarTimespanMultiplier), new HashSet<Bar>());
+                        bars.ForEach(x => barList.Add(x));
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
         public void AddBar(Bar bar)
         {
-            if (barCollection.TryGetValue((bar.BarTimespan, bar.BarTimespanMultiplier), out List<Bar> barList))
+            if (barCollection.TryGetValue((bar.BarTimespan, bar.BarTimespanMultiplier), out HashSet<Bar> barList))
             {
                 barList.Add(bar);
             }
             else
             {
-                barCollection.AddAndReturn((bar.BarTimespan, bar.BarTimespanMultiplier), new List<Bar>()).Add(bar);
+                barCollection.AddAndReturn((bar.BarTimespan, bar.BarTimespanMultiplier), new HashSet<Bar>()).Add(bar);
             }
         }
         public List<Bar> GetBars(int timespanMultiplier, PolygonTimespan barTimespan, DateTime start, DateTime end)
         {
-            if (barCollection.TryGetValue((barTimespan, timespanMultiplier), out List<Bar> barList))
+            if (barCollection.TryGetValue((barTimespan, timespanMultiplier), out HashSet<Bar> barList))
             {
                 return barList.Where(x => x.Timestamp.EST >= start && x.Timestamp.EST < end).ToList();
             }
@@ -76,7 +77,7 @@ namespace PolygonApiClient.ExtendedClient
         }
         public List<Bar> GetBars(int timespanMultiplier, PolygonTimespan barTimespan)
         {
-            if (barCollection.TryGetValue((barTimespan, timespanMultiplier), out List<Bar> barList))
+            if (barCollection.TryGetValue((barTimespan, timespanMultiplier), out HashSet<Bar> barList))
             {
                 return barList.ToList();
             }

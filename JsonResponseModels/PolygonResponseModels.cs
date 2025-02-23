@@ -417,6 +417,65 @@ namespace PolygonApiClient
         public int Tape { get; set; }
     }
 
+
+    /// <summary>
+    /// Indices Snapshot
+    /// </summary>
+    public class RestIndiciesSnapshot_Response : Rest_Response<RestIndicesSnapshot_Result[]>
+    {
+
+    }
+    public class RestIndicesSnapshot_Result
+    {
+        [JsonPropertyName("value")]
+        public double Value { get; set; }
+
+        [JsonPropertyName("last_updated")]
+        public long Last_Update_Timestamp_Ns { get; set; }
+
+        [JsonPropertyName("timeframe")]
+        public string Timeframe { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("ticker")]
+        public string Symbol { get; set; }
+
+        [JsonPropertyName("market_status")]
+        public string Market_Status { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("session")]
+        public RestIndicesSnapshotSession Session { get; set; }
+    }
+    public class RestIndicesSnapshotSession
+    {
+        [JsonPropertyName("change")]
+        public double Todays_Change { get; set; }
+        
+        [JsonPropertyName("change_percent")]
+        public double Todays_Change_Percent { get; set; }
+        
+        [JsonPropertyName("close")]
+        public double Change { get; set; }
+        
+        [JsonPropertyName("high")]
+        public double High { get; set; }
+        
+        [JsonPropertyName("low")]
+        public double Low { get; set; }
+        
+        [JsonPropertyName("open")]
+        public double Open { get; set; }
+        
+        [JsonPropertyName("previous_close")]
+        public double Previous_Close { get; set; }
+
+    }
+
     //
     // Snapshots - These models are used for 'All Tickers', 'Gainers/Losers', and 'Ticker'
     //
@@ -812,7 +871,7 @@ namespace PolygonApiClient
         public string Share_Class_FIGI { get; set; }
 
         [JsonPropertyName("share_class_shares_outstanding")]
-        public int Share_Class_Shares_Outstanding { get; set; }
+        public long Share_Class_Shares_Outstanding { get; set; }
 
         [JsonPropertyName("sic_code")]
         public string SIC_Code { get; set; }
@@ -836,7 +895,7 @@ namespace PolygonApiClient
         public string Type { get; set; }
 
         [JsonPropertyName("weighted_shares_outstanding")]
-        public int Weighted_Shares_Outstanding { get; set; }
+        public long Weighted_Shares_Outstanding { get; set; }
     }
     public class RestTickerDetail_Address
     {
@@ -1704,6 +1763,18 @@ namespace PolygonApiClient
 
         [JsonPropertyName("z")]
         public int Tape { get; set; }
+    }
+
+    public class Socket_Value : Socket_Base
+    {
+        [JsonPropertyName("t")]
+        public long Timestamp_Ms { get; set; }
+
+        [JsonPropertyName("T")]
+        public string Symbol { get; set; }
+
+        [JsonPropertyName("val")]
+        public double Value{ get; set; }
     }
 
     #endregion

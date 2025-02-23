@@ -278,13 +278,13 @@ namespace PolygonApiClient
                 switch (Subscription)
                 {
                     case PolygonSubscription.basic:
-                        return DateTime.Today.AddYears(0);
+                        return DateTime.Today.AddYears(1);
                     case PolygonSubscription.starter:
-                        return DateTime.Today.AddYears(0);
+                        return DateTime.Today.AddYears(1);
                     case PolygonSubscription.advanced:
-                        return DateTime.Today.AddYears(0);
+                        return DateTime.Today.AddYears(1);
                     default:
-                        return DateTime.Today.AddYears(0);
+                        return DateTime.Today.AddYears(1);
                 }
             }
         }

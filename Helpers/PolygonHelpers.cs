@@ -89,10 +89,23 @@ namespace PolygonApiClient
         /// </summary>
         /// <param name="me"></param>
         /// <returns></returns>
-        private static string AppendOptionIdentifier(this string me)
+        internal static string AppendOptionIdentifier(this string me)
         {
             if (me.IsOptionSymbol() && me.Substring(0, 2) != "O:")
                 return $"O:{me}";
+
+            return me;
+        }
+
+        /// <summary>
+        /// Adds a leading 'I:' if the symbol is identified as an index and if not present already
+        /// </summary>
+        /// <param name="me"></param>
+        /// <returns></returns>
+        internal static string AppendIndexIdentifier(this string me)
+        {
+            if (me.Substring(0, 2) != "I:")
+                return $"I:{me}";
 
             return me;
         }

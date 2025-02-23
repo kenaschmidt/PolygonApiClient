@@ -10,7 +10,7 @@ namespace PolygonApiClient.ExtendedClient
         public override double Strike => optionData.Strike_Price;
         public override int Shares_Per_Contract => optionData.Shares_Per_Contract;
 
-        public ExpiredOption(RestOptionsContract_Result optionData, Stock underlyingStock) : base(optionData.Symbol, underlyingStock)
+        public ExpiredOption(RestOptionsContract_Result optionData, Security underlyingSecurity) : base(optionData.Symbol, underlyingSecurity)
         {
             this.optionData = optionData;
             Expiry = DateTime.Parse(this.optionData.Expiration_Date);

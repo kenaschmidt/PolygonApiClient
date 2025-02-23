@@ -5,7 +5,7 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolygonApiClient", "PolygonApiClient.csproj", "{D46771C0-3CCF-4937-89E2-A30F5424BB6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "..\UnitTestProject1\UnitTestProject1.csproj", "{2F47E89E-5D01-4D1E-AD49-139A4B570B46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolygonApiTests", "..\PolygonApiTests\PolygonApiTests.csproj", "{728DC31E-0926-4233-B498-4D1E1DD60543}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{D46771C0-3CCF-4937-89E2-A30F5424BB6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D46771C0-3CCF-4937-89E2-A30F5424BB6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D46771C0-3CCF-4937-89E2-A30F5424BB6F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F47E89E-5D01-4D1E-AD49-139A4B570B46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{728DC31E-0926-4233-B498-4D1E1DD60543}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{728DC31E-0926-4233-B498-4D1E1DD60543}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{728DC31E-0926-4233-B498-4D1E1DD60543}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{728DC31E-0926-4233-B498-4D1E1DD60543}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -80,7 +80,8 @@ namespace PolygonApiClient
         crypto = 2,
         fx = 3,
         otc = 4,
-        indices = 5
+        indices = 5,
+        options = 6
     }
     public enum PolygonLocale
     {

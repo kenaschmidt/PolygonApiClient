@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Permissions;
@@ -11,6 +12,27 @@ using System.Threading.Tasks;
 
 namespace PolygonApiClient.ExtendedClient
 {
+    public interface IHasOptions
+    {
+        string Symbol { get; }
+
+        OptionChain OptionChain { get; }
+
+        void AddOptions(List<IPolygonOptionData> options);
+
+        void AddOptions(IPolygonOptionData[] options);
+
+        void AddOptions(RestOptionsContract_Result[] options);
+
+        Task LoadOptions();
+        
+        Task LoadOptions(DateTime since, bool expiredOnly = true);
+
+        Task LoadOptionExpiry(DateTime expiry);
+
+    }
+
+
     public abstract partial class Security : IEquatable<Security>
     {
         public ISecurityDataProvider dataProvider { get; }
@@ -23,17 +45,18 @@ namespace PolygonApiClient.ExtendedClient
             dataProvider = dataClient;
         }
 
-        protected List<Trade> Trades { get; } = new List<Trade>();
-        protected List<Quote> Quotes { get; } = new List<Quote>();
-        protected BarList Bars { get; } = new BarList();
+        public List<Trade> Trades { get; protected set; } = new List<Trade>();
+        public List<Quote> Quotes { get; protected set; } = new List<Quote>();
 
-        protected Trade LastTrade { get; set; }
-        protected Quote LastQuote { get; set; }
+        public Trade LastTrade { get; set; }
+        public Quote LastQuote { get; set; }
 
 
         private void AddQuotes(List<Quote> quotes)
         {
             Quotes.AddRange(quotes);
+            if (quotes.Count > 0)
+                OnQuoteReceived(quotes.Last());
         }
         private void AddTrades(List<Trade> trades)
         {
@@ -42,8 +65,13 @@ namespace PolygonApiClient.ExtendedClient
 
         public void AddQuotesAndTrades(List<Quote> quotes, List<Trade> trades)
         {
-            // This is here to try and fix situations where we are adding a list with trades that show up before any quotes
-            if (LastQuote != null)
+            //
+            // Exclude Trades with appropriate codes here            
+            //
+
+            trades.RemoveAll(x => x.IsNotUpdateVolumeTrade());
+
+            if (LastQuote != null && quotes.Count == 0)
                 quotes.Add(LastQuote);
 
             trades.SetTradeSides(quotes);
@@ -53,34 +81,58 @@ namespace PolygonApiClient.ExtendedClient
 
             OnTradeSnapshotReceived(trades);
         }
-        public void AddBars(List<Bar> bars)
-        {
-            Bars.AddBars(bars);
-        }
 
-
-        public List<Bar> GetBars(int timespanMultiplier, PolygonTimespan timespan, DateTime from, DateTime to)
+        public async Task<List<Bar>> GetBars(int timespanMultiplier, PolygonTimespan timespan, DateTime from, DateTime to)
         {
-            return Bars.GetBars(timespanMultiplier, timespan, from, to);
+            return await dataProvider.Get_Bars_Async(this, timespan, timespanMultiplier, from, to);
         }
-        public List<Bar> GetBars(int timespanMultiplier, PolygonTimespan timespan, DateTime day)
+        public async Task<List<Bar>> GetBars(int timespanMultiplier, PolygonTimespan timespan, DateTime day)
         {
-            return Bars.GetBars(timespanMultiplier, timespan, day.Date, day.Date.AddDays(1).AddTicks(-1));
+            return await dataProvider.Get_Bars_Async(this, timespan, timespanMultiplier, day);
         }
 
         #region Data Request Methods / REST Async
 
         public async Task<Quote> LatestQuoteAsync()
         {
-            if (QuotesStreaming)
+            if (QuotesStreaming && LastQuote != null)
                 return LastQuote;
 
             return await dataProvider.Quote_Async(this);
         }
-        public async Task<Quote> LatestQuoteAsync(DateTime asOf)
+        public virtual async Task<Quote> LatestQuoteAsync(DateTime asOf)
         {
             return await dataProvider.Quote_Async(this, asOf);
         }
+        public async Task<Trade> LatestTradeAsync()
+        {
+            if (TradesStreaming && LastTrade != null)
+                return LastTrade;
+
+            return await dataProvider.Trade_Async(this);
+        }
+        public async Task<Trade> LatestTradeAsync(DateTime asOf)
+        {
+            return await dataProvider.Trade_Async(this, asOf);
+        }
+        public async Task<Bar> LatestDailyOHLCAsync()
+        {
+            return await dataProvider.Previous_Close_Async(this);
+        }
+
+        public async Task LoadQuotesTradesAsync(DateTime day)
+        {
+            await dataProvider.Load_Quotes_And_Trades_Async(this, day);
+        }
+        public async Task LoadQuotesTradesAsync(DateTime from, DateTime to)
+        {
+            await dataProvider.Load_Quotes_And_Trades_Async(this, from, to);
+        }
+
+        //
+        // Last Calculation Values are used to return a good value for pricing purposes on any type of security.
+        //
+        public abstract Task<double> LastCalculationValueAsync(DateTime? asOf = null);
 
         #endregion
 
@@ -148,6 +200,7 @@ namespace PolygonApiClient.ExtendedClient
             TradeSnapshotReceived?.Invoke(this, tradeSnapshots);
         }
 
+
         protected PolygonSocketHandler SocketHandler { get; set; }
         public void AttachSocketHandler(PolygonSocketHandler socketHandler)
         {
@@ -166,11 +219,11 @@ namespace PolygonApiClient.ExtendedClient
         public bool TradesStreaming => SocketHandler?.TradesStreaming ?? false;
         public bool SecondsStreaming => SocketHandler?.SecondsStreaming ?? false;
         public bool MinutesStreaming => SocketHandler?.MinutesStreaming ?? false;
+        public bool SnapshotQuotesTradesStreaming => snapshotHandler_quotesTrades != null;
 
         protected void HandleSocketQuote(object sender, Socket_Quote e)
         {
-            Quotes.Add(new Quote(e));
-
+            LastQuote = Quotes.AddAndReturn(new Quote(e));
             OnQuoteReceived(LastQuote);
         }
         protected void HandleSocketTrade(object sender, Socket_Trade e)
@@ -180,20 +233,18 @@ namespace PolygonApiClient.ExtendedClient
             if (LastQuote != null)
                 newTrade.SetTradeSide(LastQuote);
 
-            Trades.Add(newTrade);
+            LastTrade = Trades.AddAndReturn(newTrade);
 
             OnTradeReceived(LastTrade);
         }
         protected void HandleSocketAggregateSecond(object sender, Socket_Aggregate e)
         {
             Bar bar = new Bar(e, PolygonTimespan.second, 1);
-            Bars.AddBar(bar);
             OnSecondBarReceived(bar);
         }
         protected void HandleSocketAggregateMinute(object sender, Socket_Aggregate e)
         {
             Bar bar = new Bar(e, PolygonTimespan.minute, 1);
-            Bars.AddBar(bar);
             OnMinuteBarReceived(bar);
         }
 
@@ -201,6 +252,8 @@ namespace PolygonApiClient.ExtendedClient
         {
             if (QuotesStreaming)
                 return;
+
+            Console.WriteLine($"START QUOTES FOR {this.Symbol}");
 
             AttachSocketHandler(await dataProvider.Stream_Quotes(this, true));
         }
@@ -256,12 +309,11 @@ namespace PolygonApiClient.ExtendedClient
 
 
         private RestSnapshotHandler snapshotHandler_quotesTrades { get; set; }
-        public async Task StreamQuotesTradesSnapshots()
+        public void StreamQuotesTradesSnapshots(int secondsInterval = 1)
         {
-            await StopTrades();
-            await StopQuotes();
+            // This socket handler only exists to allow starting/stopping the stream - the actual data is passed directly to the AddQuotesAndTrades() method
 
-            snapshotHandler_quotesTrades = dataProvider.Stream_Quotes_Trades_Snapshots(this);
+            snapshotHandler_quotesTrades = dataProvider.Stream_Quotes_Trades_Snapshots(this, secondsInterval);
         }
         public void StopQuotesTradesSnapshots()
         {

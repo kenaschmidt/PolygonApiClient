@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace PolygonApiClient
 {
     /// <summary>
-    /// Go-between class for managing streaking socket data
+    /// Go-between class for managing streaming socket data
     /// </summary>
     public class PolygonSocketHandler : IEquatable<PolygonSocketHandler>
     {
@@ -17,6 +17,7 @@ namespace PolygonApiClient
         public event EventHandler<Socket_Aggregate> MinuteAggregateReceived;
         public event EventHandler<Socket_Quote> QuoteReceived;
         public event EventHandler<Socket_Trade> TradeReceived;
+        public event EventHandler<Socket_Value> ValueReceived;
 
         #endregion
 
@@ -26,6 +27,7 @@ namespace PolygonApiClient
         public bool TradesStreaming { get; set; } = false;
         public bool SecondsStreaming { get; set; } = false;
         public bool MinutesStreaming { get; set; } = false;
+        public bool ValueStreaming { get; set; } = false;
 
         public PolygonSocketHandler(string symbol)
         {
@@ -47,6 +49,10 @@ namespace PolygonApiClient
         public virtual void T(Socket_Trade t)
         {
             TradeReceived?.Invoke(this, t);
+        }
+        public virtual void V(Socket_Value v)
+        {
+            ValueReceived?.Invoke(this, v);
         }
 
         public override bool Equals(object obj)

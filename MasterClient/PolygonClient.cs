@@ -5,14 +5,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PolygonApiClient.Helpers;
 using PolygonApiClient;
-using PolygonApiClient.Properties;
 using PolygonApiClient.RESTClient;
 using PolygonApiClient.WebSocketsClient;
 using static PolygonApiClient.PolygonHelpers;
@@ -73,7 +71,10 @@ namespace PolygonApiClient
             {
                 // Check WebSocket permissions before creating a client
                 if (!SubscriptionSettings.GetSettings(endpoint).HasPermission(PolygonPermissions.WebSockets))
+                {
+                    Debug.WriteLine($"No websocket permissions for {endpoint.ToString()}");
                     continue;
+                }
 
                 var client = socketClients.AddAndReturn(endpoint, new PolygonSocketClient(API_Key, endpoint));
 
@@ -119,13 +120,14 @@ namespace PolygonApiClient
             {
                 foreach (PolygonSocketClient client in socketClients.Values)
                 {
+                    Console.WriteLine($"Opening {client.Endpoint}");
                     await client.OpenAsync();
                 }
             }
             catch (Exception ex)
             {
                 OnSystemMessage($"Could not connect socket: {ex.Message}");
-                Debug.WriteLine($"Could not connect socket: {ex.Message}");
+                Console.WriteLine($"Could not connect socket: {ex.Message}");
             }
         }
 
@@ -206,9 +208,9 @@ namespace PolygonApiClient
                     sort,
                     limit);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -228,9 +230,9 @@ namespace PolygonApiClient
                    adjusted,
                    include_otc);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -251,9 +253,9 @@ namespace PolygonApiClient
                     _date,
                     adjusted);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -271,9 +273,9 @@ namespace PolygonApiClient
                     symbol,
                     adjusted);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -313,9 +315,9 @@ namespace PolygonApiClient
                        limit,
                        sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -342,9 +344,9 @@ namespace PolygonApiClient
                     sort);
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -361,9 +363,9 @@ namespace PolygonApiClient
                 return await restClient.Last_Trade_Async(
                     symbol);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -382,9 +384,9 @@ namespace PolygonApiClient
                     symbol,
                     timestamp);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -424,9 +426,9 @@ namespace PolygonApiClient
                        limit,
                        sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -452,9 +454,9 @@ namespace PolygonApiClient
                     sort);
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -470,9 +472,9 @@ namespace PolygonApiClient
                 return await restClient.Last_Quote_Async(
                     symbol);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -491,9 +493,9 @@ namespace PolygonApiClient
                     symbol,
                     timestamp);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -526,9 +528,9 @@ namespace PolygonApiClient
                     tickerList.Length > 0 ? tickerList : null,
                     include_otc);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -543,24 +545,52 @@ namespace PolygonApiClient
                     direction,
                     include_otc);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
         public async Task<RestTickerSnapshot_Result> Ticker_Async(
-            string stocksTicker)
+            string ticker)
         {
             // This method calls the same endpoint as All_Tickers but with a single ticker defined. Return data is exactly the same
 
-            var result = await All_Tickers_Async(new List<string> { stocksTicker }, true);
+            var result = await All_Tickers_Async(new List<string> { ticker }, true);
 
             if (result.Length == 0)
                 return null;
 
             return result[0];
         }
+
+
+        public async Task<RestIndicesSnapshot_Result[]> Indices_Snapshot_Async(
+            string ticker,
+            PolygonFilterParams? tickerFilter = null,
+            PolygonOrder? order = null,
+            int? limit = null,
+            PolygonTickerSort? sort = null)
+        {
+
+            try
+            {
+                // Normalize parameters
+                ticker = ticker.ToUpper().AppendIndexIdentifier();
+
+                return await restClient.Indices_Snapshot_Async(
+                    ticker,
+                    tickerFilter,
+                    order,
+                    limit,
+                    sort);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
 
         public async Task<RestOptionContract_Result> Option_Contract_Async(
             string underlyingAsset,
@@ -577,9 +607,9 @@ namespace PolygonApiClient
                     underlyingAsset,
                     optionContract);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
         public async Task<RestOptionsChain_Result[]> Options_Chain_Async(
@@ -611,9 +641,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -659,9 +689,9 @@ namespace PolygonApiClient
                     adjusted,
                     limit);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -699,9 +729,9 @@ namespace PolygonApiClient
                     adjusted,
                     limit);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -743,9 +773,9 @@ namespace PolygonApiClient
                     order,
                     limit);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -781,9 +811,9 @@ namespace PolygonApiClient
                     order,
                     limit);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -810,9 +840,9 @@ namespace PolygonApiClient
                     options_ticker,
                     _as_of);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -854,9 +884,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -899,9 +929,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -925,11 +955,12 @@ namespace PolygonApiClient
                     ticker,
                     _date);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
+
 
         /// <summary>
         /// Get a timeline of events for the entity associated with the given ticker, CUSIP, or Composite FIGI.
@@ -972,9 +1003,9 @@ namespace PolygonApiClient
                     id,
                     _types);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1007,9 +1038,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1024,9 +1055,9 @@ namespace PolygonApiClient
                     asset_class,
                     locale);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1037,9 +1068,9 @@ namespace PolygonApiClient
                 // Call async request method
                 return await restClient.Market_Holidays_Async();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1050,9 +1081,9 @@ namespace PolygonApiClient
                 // Call async request method
                 return await restClient.Market_Status_Async();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1085,9 +1116,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1141,9 +1172,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1184,9 +1215,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1212,9 +1243,9 @@ namespace PolygonApiClient
                     limit,
                     sort);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1229,9 +1260,9 @@ namespace PolygonApiClient
                     asset_class,
                     locale);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
         }
 
@@ -1248,12 +1279,12 @@ namespace PolygonApiClient
 
         public async Task<PolygonSocketHandler> Aggregate_Second_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
+            return await GetClient(endpoint).Aggregate_Second_Bars_Streaming(symbol, subscribe);
         }
 
         public async Task<PolygonSocketHandler> Aggregate_Minute_Bars_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
-            return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
+            return await GetClient(endpoint).Aggregate_Minute_Bars_Streaming(symbol, subscribe);
         }
 
         public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
@@ -1264,6 +1295,11 @@ namespace PolygonApiClient
         public async Task<PolygonSocketHandler> Quotes_Streaming_Async(string symbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
         {
             return await GetClient(endpoint).Quotes_Streaming_Async(symbol, subscribe);
+        }
+
+        public async Task<PolygonSocketHandler> Value_Streaming_Async(string indexSymbol, PolygonConnectionEndpoint endpoint, bool subscribe = true)
+        {
+            return await GetClient(endpoint).Value_Streaming_Async(indexSymbol, subscribe);
         }
 
         #endregion

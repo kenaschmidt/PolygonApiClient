@@ -9,9 +9,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace PolygonApiClient.WebSocketsClient
-{    public class PolygonSocketClient
+{
+    public class PolygonSocketClient
     {
         #region Client Events
 
@@ -74,7 +76,7 @@ namespace PolygonApiClient.WebSocketsClient
 
         public const string BaseUri = "wss://socket.polygon.io/";
 
-        private ClientWebSocket client { get; } = new ClientWebSocket();
+        private ClientWebSocket client { get; }
 
         private Uri connectionPath { get; }
 
@@ -82,6 +84,7 @@ namespace PolygonApiClient.WebSocketsClient
 
         public PolygonSocketClient(string apiKey, PolygonConnectionEndpoint endpoint)
         {
+            client = new ClientWebSocket();
             Endpoint = endpoint;
             Name = endpoint.ToString();
             connectionPath = new Uri($"{BaseUri}{endpoint.ToString()}");
@@ -171,6 +174,8 @@ namespace PolygonApiClient.WebSocketsClient
                         // Read the buffer to a string
                         string msg = System.Text.Encoding.Default.GetString(buffer.TakeWhile(x => x != '\0').ToArray());
 
+                        //Console.WriteLine(msg);
+
                         // If the message is fragmented, continue reading
                         while (!result.EndOfMessage)
                         {
@@ -200,7 +205,8 @@ namespace PolygonApiClient.WebSocketsClient
                             // Send all normally formatted messages to be processed
                             processMessage(msg);
                         }
-                    };
+                    }
+                    ;
                 })
                 { IsBackground = true }.Start();
             }
@@ -236,6 +242,9 @@ namespace PolygonApiClient.WebSocketsClient
                     break;
                 case "Q":
                     quoteMessageHandler(JsonSerializer.Deserialize<Socket_Quote>(obj));
+                    break;
+                case "V":
+                    valueMessageHandler(JsonSerializer.Deserialize<Socket_Value>(obj));
                     break;
                 default:
                     throw new Exception("Unknown Socket event type");
@@ -275,19 +284,17 @@ namespace PolygonApiClient.WebSocketsClient
 
         #region Socket Handlers
 
-        private Dictionary<string, PolygonSocketHandler> socketHandlers = new Dictionary<string, PolygonSocketHandler>();
+        private ConcurrentDictionary<string, PolygonSocketHandler> socketHandlers = new ConcurrentDictionary<string, PolygonSocketHandler>();
 
         public PolygonSocketHandler GetSocketHandler(string symbol)
         {
             if (socketHandlers.TryGetValue(symbol, out var ret))
             {
-                Console.WriteLine("Return existing socket handler");
                 return ret;
             }
             else
             {
-                socketHandlers.Add(symbol, new PolygonSocketHandler(symbol));
-                Console.WriteLine("Return new socket handler");
+                socketHandlers.TryAdd(symbol, new PolygonSocketHandler(symbol));
                 return GetSocketHandler(symbol);
             }
         }
@@ -330,7 +337,7 @@ namespace PolygonApiClient.WebSocketsClient
         public async Task<PolygonSocketHandler> Trades_Streaming_Async(string symbol, bool subscribe = true)
         {
             // T.
-            
+
             PolygonSocketHandler ret = null;
 
             if (subscribe)
@@ -359,12 +366,30 @@ namespace PolygonApiClient.WebSocketsClient
 
         }
 
+        public async Task<PolygonSocketHandler> Value_Streaming_Async(string indexSymbol, bool subscribe = true)
+        {
+            // V.
+
+            indexSymbol = indexSymbol.AppendIndexIdentifier();
+
+            PolygonSocketHandler ret = null;
+
+            if (subscribe)
+                ret = await subscribeStreamingAsync(indexSymbol, "V.");
+            else
+                ret = await unsubscribeStreamingAsync(indexSymbol, "V.");
+
+            ret.ValueStreaming = subscribe;
+            return ret;
+        }
+
         private async Task<PolygonSocketHandler> subscribeStreamingAsync(string symbol, string prefix)
         {
             string reqStr = @"{""action"":""subscribe"", ""params"":""" + prefix + symbol.ToUpper() + @"""}";
 
             var ret = GetSocketHandler(symbol);
 
+            Console.WriteLine($"REQUEST: {reqStr}");
             await sendAsync(reqStr);
 
             return ret;
@@ -409,6 +434,11 @@ namespace PolygonApiClient.WebSocketsClient
         private void aggregateMinuteMessageHandler(Socket_Aggregate obj)
         {
             GetSocketHandler(obj.Symbol).AM(obj);
+        }
+
+        private void valueMessageHandler(Socket_Value obj)
+        {
+            GetSocketHandler(obj.Symbol).V(obj);
         }
 
         #endregion  

@@ -34,6 +34,12 @@ namespace PolygonApiClient.ExtendedClient
                 throw new ArgumentException($"Unable to create quote from object {polygonQuoteBase.GetType().Name}");
         }
 
+        public Quote(IPolygonQuote polygonQuoteBase, DateTime timestamp)
+        {
+            TickBase = polygonQuoteBase;
+            Timestamp = PolygonTimestamp.FromEstDateTime(timestamp);
+        }
+
         public static Quote EmptyQuote()
         {
             Debug.WriteLine($"*** WARNING: Empty quote generated ***");

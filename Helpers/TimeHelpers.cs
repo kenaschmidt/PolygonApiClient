@@ -17,8 +17,16 @@ namespace PolygonApiClient
         public static TimeSpan MarketRTHCloseEST = new TimeSpan(16, 0, 0);
         public static TimeSpan MarketAfterHoursCloseEST = new TimeSpan(20, 0, 0);
 
+        public static DateTime AtMarketPremarketOpenEST(this DateTime me) => me.Date.Add(MarketPremarketOpenEST);
+        public static DateTime AtMarketRTHOpenEST(this DateTime me) => me.Date.Add(MarketRTHOpenEST);
+        public static DateTime AtMarketRTHCloseEST(this DateTime me) => me.Date.Add(MarketRTHCloseEST);
+        public static DateTime AtMarketAfterHoursCloseEST(this DateTime me) => me.Date.Add(MarketAfterHoursCloseEST);
+             
+
         // Value used for options pricing calculations
-        static double SecondsInTradingDayRTH = (MarketRTHCloseEST - MarketRTHOpenEST).TotalSeconds;
+        public static double SecondsInTradingDayRTH = (MarketRTHCloseEST - MarketRTHOpenEST).TotalSeconds;
+
+        public static double MinutesInTradingDayRTH = (MarketRTHCloseEST - MarketRTHOpenEST).TotalMinutes;
 
         public const double CalendarDaysPerYear = 365.0;
 
@@ -34,10 +42,12 @@ namespace PolygonApiClient
         }
         public static DateTime UTC_to_EST(this DateTime UtcTime)
         {
+            UtcTime = DateTime.SpecifyKind(UtcTime, DateTimeKind.Utc);
             return TimeZoneInfo.ConvertTimeFromUtc(UtcTime, eastern);
         }
         public static DateTime EST_to_UTC(this DateTime EstTime)
         {
+            EstTime = DateTime.SpecifyKind(EstTime, DateTimeKind.Unspecified);
             return TimeZoneInfo.ConvertTimeToUtc(EstTime, eastern);
         }
         public static DateTime Local_to_EST(this DateTime LocalTime)

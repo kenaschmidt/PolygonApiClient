@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace PolygonApiClient.ExtendedClient
 {
-    public class Stock : Security, IHasOptions
+    public partial class Index : Security, IHasOptions
     {
         public OptionChain OptionChain { get; }
 
-        public Stock(string symbol, ISecurityDataProvider dataProvider) : base(symbol, dataProvider)
+        public Index(string symbol, ISecurityDataProvider dataProvider) : base(symbol, dataProvider)
         {
             OptionChain = new OptionChain(this);
         }
@@ -49,13 +48,61 @@ namespace PolygonApiClient.ExtendedClient
         {
             await dataProvider.Load_Options_Expiry_Async(this, expiry);
         }
+    }
+
+    /// <summary>
+    /// SOCKET/Realtime Implementation
+    /// </summary>
+    public partial class Index
+    {
+        public event EventHandler<double> ValueReceived;
+        private void OnValueReceived(double value)
+        {
+            ValueReceived?.Invoke(this, value);
+        }
+        public bool ValueStreaming => SocketHandler?.ValueStreaming ?? false;
+
+        public double? LastValue { get; private set; }
+
+        protected void HandleSocketValue(object sender, Socket_Value e)
+        {
+            LastValue = e.Value;
+            OnValueReceived(e.Value);
+        }
+
+        public async Task StreamValues()
+        {
+            if (ValueStreaming)
+                return;
+
+            Console.WriteLine($"START VALUE STREAM FOR {this.Symbol}");
+
+            AttachSocketHandler(await dataProvider.Stream_Values(this, true));
+        }
+        public async Task StopValues()
+        {
+            if (!ValueStreaming)
+                return;
+
+            AttachSocketHandler(await dataProvider.Stream_Values(this, false));
+        }
 
         public override async Task<double> LastCalculationValueAsync(DateTime? asOf = null)
         {
             if (asOf == null)
-                return (await LatestQuoteAsync()).MidpointPrice;
+                return await LatestValueAsync();
             else
-                return (await LatestQuoteAsync(asOf.Value)).MidpointPrice;
+            {
+                // Doesn't have historical yet
+                return await LatestValueAsync();
+            }
+        }
+        internal async Task<double> LatestValueAsync()
+        {
+            if (LastValue == null)
+                LastValue = await dataProvider.Value_Async(this);
+
+            return LastValue.Value;
         }
     }
 

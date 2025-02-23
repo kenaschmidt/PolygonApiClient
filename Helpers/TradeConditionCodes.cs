@@ -9,6 +9,7 @@ namespace PolygonApiClient
 {
     public enum TradeConditions
     {
+
         [Description("Regular Sale")] _0 = 0,
         [Description("Acquisition")] _1 = 1,
         [Description("Average Price Trade")] _2 = 2,
